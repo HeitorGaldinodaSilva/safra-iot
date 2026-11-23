@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Segurança · Verificação em duas etapas</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#f4f1fa;margin:0;padding:24px;color:#222}
+  main{max-width:460px;margin:0 auto;background:#fff;border-radius:14px;padding:26px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+  h1{font-size:20px;margin:0 0 4px} p{font-size:14px;color:#555}
+  button{padding:10px 14px;border:0;border-radius:8px;background:#4b2e83;color:#fff;cursor:pointer;font-size:14px}
+  input{padding:10px;font-size:18px;letter-spacing:3px;text-align:center;border:1px solid #ccc;border-radius:8px;width:150px}
+  #qr{margin:14px 0;display:flex;justify-content:center} code{word-break:break-all;font-size:13px}
+  pre{background:#f4f4f4;padding:12px;border-radius:8px;font-size:15px}
+  .erro{color:#c0392b} .ok{color:#218149}
+</style>
+</head>
+<body>
+<main>
+  <h1>Verificação em duas etapas (2FA)</h1>
+  <p id="estado">Carregando…</p>
+  <div id="passo1" hidden>
+    <button id="gerar">Ativar 2FA</button>
+  </div>
+  <div id="passo2" hidden>
+    <p>1. Escaneie o QR Code com Google Authenticator, Microsoft Authenticator ou Authy.</p>
+    <div id="qr"></div>
+    <p>Sem câmera? Digite o segredo manualmente: <code id="segredo"></code></p>
+    <p>2. Digite o código de 6 dígitos que o app mostrar:</p>
+    <input id="codigo" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+    <button id="confirmar">Confirmar</button>
+  </div>
+  <div id="passo3" hidden>
+    <p class="ok"><strong>2FA ativado.</strong> Guarde estes códigos de recuperação. Cada um funciona uma única vez e não serão mostrados de novo.</p>
+    <pre id="codigos"></pre>
+  </div>
+  <p id="msg" class="erro"></p>
+  <p><a href="javascript:history.back()">Voltar</a></p>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const API = "http://localhost:3001";
+const token = sessionStorage.getItem("safra_token") || "";
+const $ = id => document.getElementById(id);
+const msg = t => { $("msg").textContent = t || ""; };
+
+async function chamar(caminho, metodo = "GET", corpo) {
+  const r = await fetch(API + caminho, {
+    method: metodo,
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+    body: corpo ? JSON.stringify(corpo) : undefined
+  });
+  const d = await r.json();
+  if (!d.sucesso) throw new Error(d.erro || "Erro " + r.status);
+  return d;
+}
+
+async function iniciar() {
+  if (!token) { $("estado").textContent = "Entre na sua conta primeiro."; return; }
+  try {
+    const e = await chamar("/2fa/estado");
+    if (e.ativo) {
+      $("estado").textContent = `2FA está ATIVO. Códigos de recuperação restantes: ${e.codigos_restantes}.`;
+    } else {
+      $("estado").textContent = "2FA está desativado nesta conta.";
+      $("passo1").hidden = false;
+    }
+  } catch (err) { $("estado").textContent = ""; msg(err.message); }
+}
+
+$("gerar").onclick = async () => {
+  msg("");
+  try {
+    const d = await chamar("/2fa/configurar", "POST");
+    $("passo1").hidden = true; $("passo2").hidden = false;
+    $("segredo").textContent = d.segredo;
+    $("qr").innerHTML = "";
+    new QRCode($("qr"), { text: d.otpauth_uri, width: 200, height: 200 });
+  } catch (err) { msg(err.message); }
+};
+
+$("confirmar").onclick = async () => {
+  msg("");
+  try {
+    const d = await chamar("/2fa/ativar", "POST", { codigo: $("codigo").value.trim() });
+    $("passo2").hidden = true; $("passo3").hidden = false;
+    $("codigos").textContent = d.codigos_recuperacao.join("\n");
+    $("estado").textContent = "";
+  } catch (err) { msg(err.message); }
+};
+
+iniciar();
+</script>
+</body>
+</html>

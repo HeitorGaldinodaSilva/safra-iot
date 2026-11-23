@@ -1,0 +1,9 @@
+{
+  "_ajuda": "Edite aqui suas lavouras. ciclo_inicio = data da poda (AAAA-MM-DD, de preferência nos últimos 90 dias). gdd_alvo = graus-dia (base 10 °C) da poda até a colheita (VALOR PROVISÓRIO: confirme com o agrônomo). t_ha = produtividade esperada em toneladas por hectare. lat/lon = coordenada do talhão (usada no Open-Meteo).",
+  "lavouras": [
+    {"id": "t01", "talhao": "TALHÃO 01", "nome": "Uva Vitória", "tipo": "mesa", "area_ha": 24.5, "t_ha": 35, "ciclo_inicio": "2026-08-05", "gdd_alvo": 1800, "lat": -9.39, "lon": -40.50},
+    {"id": "t02", "talhao": "TALHÃO 02", "nome": "Uva Itália", "tipo": "mesa", "area_ha": 18.2, "t_ha": 30, "ciclo_inicio": "2026-09-10", "gdd_alvo": 1800, "lat": -9.40, "lon": -40.52},
+    {"id": "t03", "talhao": "TALHÃO 03", "nome": "Syrah (vinho)", "tipo": "vinho", "area_ha": 15.0, "t_ha": 14, "ciclo_inicio": "2026-09-25", "gdd_alvo": 1700, "lat": -9.38, "lon": -40.48},
+    {"id": "t04", "talhao": "TALHÃO 04", "nome": "Uva Crimson", "tipo": "mesa", "area_ha": 22.0, "t_ha": 32, "ciclo_inicio": "2026-12-01", "gdd_alvo": 1800, "lat": -9.41, "lon": -40.51}
+  ]
+}

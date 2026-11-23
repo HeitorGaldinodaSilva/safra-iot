@@ -1,0 +1,169 @@
+{
+ "movimentacoes": [
+  {
+   "id": "a37cb6d9bf",
+   "tipo": "receita",
+   "categoria": "Venda",
+   "descricao": "Venda de Syrah (vinícola)",
+   "detalhe": "Lote #035",
+   "data": "2026-08-12",
+   "status": "recebido",
+   "valor": 52400,
+   "exemplo": true
+  },
+  {
+   "id": "87a4bb1052",
+   "tipo": "receita",
+   "categoria": "Exportação",
+   "descricao": "Exportação Lote #024",
+   "detalhe": "Europa",
+   "data": "2026-09-06",
+   "status": "recebido",
+   "valor": 66300,
+   "exemplo": true
+  },
+  {
+   "id": "e356067eb5",
+   "tipo": "receita",
+   "categoria": "Venda",
+   "descricao": "Venda de Uva Vitória",
+   "detalhe": "Lote #024",
+   "data": "2026-09-11",
+   "status": "recebido",
+   "valor": 21250,
+   "exemplo": true
+  },
+  {
+   "id": "841c96c60c",
+   "tipo": "receita",
+   "categoria": "Venda",
+   "descricao": "Venda de Uva Itália",
+   "detalhe": "Lote #031",
+   "data": "2026-10-11",
+   "status": "recebido",
+   "valor": 38900,
+   "exemplo": true
+  },
+  {
+   "id": "dbb35b4633",
+   "tipo": "receita",
+   "categoria": "Exportação",
+   "descricao": "Exportação Lote #031",
+   "detalhe": "Estados Unidos",
+   "data": "2026-10-26",
+   "status": "recebido",
+   "valor": 84500,
+   "exemplo": true
+  },
+  {
+   "id": "83109cebab",
+   "tipo": "receita",
+   "categoria": "Venda",
+   "descricao": "Venda de Uva Vitória",
+   "detalhe": "Lote #037",
+   "data": "2026-11-25",
+   "status": "pendente",
+   "valor": 45000,
+   "exemplo": true
+  },
+  {
+   "id": "4f53f830fc",
+   "tipo": "receita",
+   "categoria": "Exportação",
+   "descricao": "Exportação Lote #036",
+   "detalhe": "Europa",
+   "data": "2026-12-02",
+   "status": "pendente",
+   "valor": 120000,
+   "exemplo": true
+  },
+  {
+   "id": "2a567e356d",
+   "tipo": "despesa",
+   "categoria": "Mão de obra",
+   "descricao": "Poda e manejo",
+   "detalhe": "Equipe de campo",
+   "data": "2026-08-17",
+   "status": "pago",
+   "valor": 21400,
+   "exemplo": true
+  },
+  {
+   "id": "c6b7bcdd82",
+   "tipo": "despesa",
+   "categoria": "Logística",
+   "descricao": "Transporte da produção",
+   "detalhe": "Fazenda → Porto",
+   "data": "2026-09-07",
+   "status": "pago",
+   "valor": 4280,
+   "exemplo": true
+  },
+  {
+   "id": "7fc972cdb2",
+   "tipo": "despesa",
+   "categoria": "Insumos",
+   "descricao": "Compra de fertilizantes",
+   "detalhe": "Fornecedor agrícola",
+   "data": "2026-09-09",
+   "status": "pago",
+   "valor": 8450,
+   "exemplo": true
+  },
+  {
+   "id": "80d36f8627",
+   "tipo": "despesa",
+   "categoria": "Insumos",
+   "descricao": "Defensivos agrícolas",
+   "detalhe": "Fornecedor agrícola",
+   "data": "2026-10-06",
+   "status": "pago",
+   "valor": 12900,
+   "exemplo": true
+  },
+  {
+   "id": "7907fa00f0",
+   "tipo": "despesa",
+   "categoria": "Mão de obra",
+   "descricao": "Folha da colheita",
+   "detalhe": "Equipe de campo",
+   "data": "2026-10-21",
+   "status": "pago",
+   "valor": 18700,
+   "exemplo": true
+  },
+  {
+   "id": "aee98ea299",
+   "tipo": "despesa",
+   "categoria": "Logística",
+   "descricao": "Frete refrigerado",
+   "detalhe": "Fazenda → Porto",
+   "data": "2026-10-25",
+   "status": "pago",
+   "valor": 9800,
+   "exemplo": true
+  },
+  {
+   "id": "383d2ae742",
+   "tipo": "despesa",
+   "categoria": "Outros",
+   "descricao": "Manutenção de equipamentos",
+   "detalhe": null,
+   "data": "2026-11-05",
+   "status": "pago",
+   "valor": 5200,
+   "exemplo": true
+  },
+  {
+   "id": "21ac30574e",
+   "tipo": "despesa",
+   "categoria": "Insumos",
+   "descricao": "Energia da irrigação",
+   "detalhe": null,
+   "data": "2026-11-12",
+   "status": "pendente",
+   "valor": 7300,
+   "exemplo": true
+  }
+ ]
+}

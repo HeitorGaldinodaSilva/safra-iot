@@ -1,0 +1,11 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+httpx>=0.27
+python-dotenv>=1.0
+tzdata            # fuso America/Recife no Windows
+pytest>=8.0       # testes (RNF05)
+sqlalchemy>=2.0   # registro dos modelos no MySQL
+pymysql>=1.1
+pandas>=2.0       # treino dos modelos (python -m app.ml.treinar)
+numpy>=1.26
+scikit-learn>=1.4

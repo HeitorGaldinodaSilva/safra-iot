@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safra — Produtor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="produtor.css">
+  <link rel="stylesheet" href="../tema.css">
+</head>
+<body data-pagina-padrao="telainicial">
+
+  <!-- =====================================================================
+       COMPONENTES COMPARTILHADOS
+       O menu lateral e a barra do topo são escritos UMA vez só, aqui.
+       O Frontend/comum.js copia estes modelos para dentro de cada tela
+       (veja os espaços data-componente="sidebar" / "topbar" nas telas).
+       Para mudar o menu ou a barra do topo, edite só os modelos abaixo.
+       ===================================================================== -->
+  <template id="tpl-sidebar">
+    <div class="logo-area">
+    <img alt="Logo Safra" class="logo-img" src="/Frontend/Login/img/logotipo-menu.png"/>
+    <div class="logo-text">
+    <h2>Safra</h2>
+    <span>Vale do São Francisco</span>
+    </div>
+    </div>
+    <nav class="menu">
+    <a class="menu-item" href="#telainicial">
+    <span class="nav-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></svg></span>
+    <span>Inicial</span>
+    </a>
+    <a class="menu-item" href="#lavoura">
+    <span class="nav-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V12"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 16c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z"/></svg></span>
+    <span>Lavouras</span>
+    </a>
+    <a class="menu-item" href="#financeiro">
+    <span class="nav-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 7.5C15.8 6.4 14.3 5.8 12 5.8c-2.6 0-4 1.2-4 2.9 0 4.3 8.3 2.1 8.3 6.4 0 1.8-1.7 3.1-4.3 3.1-2.3 0-3.9-.8-4.7-2.1"/></svg></span>
+    <span>Financeiro</span>
+    </a>
+    <a class="menu-item" href="#relatorio">
+    <span class="nav-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6.5v18h11V6.5z"/><path d="M14 3v3.5h3.5M9.5 12h5M9.5 16h5"/></svg></span>
+    <span>Relatórios</span>
+    </a>
+    <a class="menu-item" href="#alertas">
+    <span class="nav-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg></span>
+    <span>Alertas</span>
+    <span class="badge">3</span>
+    </a>
+    <a class="menu-item" href="#exportacao">
+    <span class="nav-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="M12 4l6 7.5h-6"/><path d="M12 7L7 11.5h5"/><path d="M3.5 15h17l-2 4.5h-13z"/></svg></span>
+    <span>Exportação</span>
+    </a>
+    <a class="menu-item" href="#configuracoes">
+    <span class="nav-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></span>
+    <span>Configurações</span>
+    </a>
+    </nav>
+    <a class="menu-item sair" href="login.html">
+    <span class="nav-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5V3h4"/><path d="M16 16.5l4.5-4.5L16 7.5M20.5 12H9"/></svg></span>
+    <span>Sair</span>
+    </a>
+  </template>
+
+  <template id="tpl-topbar">
+    <div class="tb-conta">
+    <button type="button" class="tb-sino" aria-label="Notificações: 3 novas"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg><span class="tb-badge">3</span></button>
+    <div class="tb-usuario" tabindex="0" role="button" aria-label="Conta de João Silva">
+    <span class="tb-avatar">JP</span>
+    <span class="tb-dados"><strong>João Silva</strong><small>Produtor</small></span>
+    <svg class="ico tb-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    </div>
+    <label class="tb-busca"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/></svg><input type="text"/></label>
+  </template>
+
+<section class="safra-page" id="configuracoes" data-config-page data-page-title="Configurações | Safra">
+
+<!-- =========================
+         SIDEBAR
+    ========================== -->
+<aside class="sidebar" data-componente="sidebar"></aside>
+<!-- =========================
+         CONTEÚDO
+    ========================== -->
+<main class="conteudo">
+<!-- TOPBAR -->
+<header class="topbar tb" data-componente="topbar" data-busca="Buscar configuração..."></header>
+<!-- CABEÇALHO -->
+<section class="cabecalho">
+<div class="titulo-area">
+<div class="titulo-icone"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></div>
+<div>
+<h1>Configurações</h1>
+<p>
+                        Gerencie suas informações, preferências e configurações da conta.
+                    </p>
+</div>
+</div>
+<button class="btn-principal" type="button" data-config="salvar">
+                <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg> Salvar alterações
+            </button>
+</section>
+<!-- =========================
+             PERFIL
+        ========================== -->
+<section class="config-card">
+<div class="config-titulo">
+<div class="config-icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></div>
+<div>
+<h2>Meu perfil</h2>
+<p>
+                        Atualize suas informações pessoais e dados de acesso.
+                    </p>
+</div>
+</div>
+<div class="perfil-area">
+<div class="perfil-avatar" data-config="avatar">JP</div>
+<div class="perfil-dados">
+<strong data-config="nome-exibido">João Silva</strong>
+<span data-config="perfil-exibido">Produtor</span>
+<button class="btn-foto" type="button" data-config="alterar-foto">
+                        Alterar foto
+                    </button>
+</div>
+</div>
+<div class="form-grid">
+<div class="campo">
+<label>Nome completo</label>
+<input type="text" data-config="nome" value="" autocomplete="name"/>
+</div>
+<div class="campo">
+<label>E-mail</label>
+<input type="email" data-config="email" value="" autocomplete="email"/>
+</div>
+<div class="campo">
+<label>Telefone</label>
+<input type="text" data-config="telefone" value="" placeholder="(00) 00000-0000" inputmode="tel" autocomplete="tel"/>
+</div>
+<div class="campo">
+<label>Tipo de usuário</label>
+<input disabled="" type="text" data-config="tipo" value="Produtor"/>
+</div>
+</div>
+</section>
+<!-- =========================
+             NOTIFICAÇÕES
+        ========================== -->
+<section class="config-card">
+<div class="config-titulo">
+<div class="config-icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg></div>
+<div>
+<h2>Notificações</h2>
+<p>
+                        Escolha quais avisos deseja receber da plataforma.
+                    </p>
+</div>
+</div>
+<div class="opcoes">
+<div class="opcao">
+<div>
+<strong>Alertas da produção</strong>
+<span>
+                            Receba avisos sobre condições que podem afetar sua lavoura.
+                        </span>
+</div>
+<label class="switch">
+<input data-pref="notif_producao" checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+<div class="opcao">
+<div>
+<strong>Condições climáticas</strong>
+<span>
+                            Receba atualizações sobre temperatura, umidade e clima.
+                        </span>
+</div>
+<label class="switch">
+<input data-pref="notif_clima" checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+<div class="opcao">
+<div>
+<strong>Exportação e logística</strong>
+<span>
+                            Receba informações sobre lotes, embarques e destinos.
+                        </span>
+</div>
+<label class="switch">
+<input data-pref="notif_exportacao" checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+<div class="opcao">
+<div>
+<strong>Relatórios</strong>
+<span>
+                            Receba avisos quando novos relatórios estiverem disponíveis.
+                        </span>
+</div>
+<label class="switch">
+<input data-pref="notif_relatorios" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+</section>
+<!-- =========================
+             PREFERÊNCIAS
+        ========================== -->
+<section class="config-card">
+<div class="config-titulo">
+<div class="config-icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></div>
+<div>
+<h2>Preferências</h2>
+<p>
+                        Personalize a forma como você utiliza o sistema Safra.
+                    </p>
+</div>
+</div>
+<div class="preferencias-grid">
+<div class="campo">
+<label>Idioma</label>
+<select data-pref="idioma">
+<option value="pt-BR">Português (Brasil)</option>
+<option value="en">English</option>
+</select>
+</div>
+<div class="campo">
+<label>Unidade de peso</label>
+<select data-pref="unidade_peso">
+<option value="kg">Quilograma (kg)</option>
+<option value="ton">Tonelada (ton)</option>
+</select>
+</div>
+<div class="campo">
+<label>Unidade de área</label>
+<select data-pref="unidade_area">
+<option value="ha">Hectare (ha)</option>
+<option value="m2">Metro quadrado (m²)</option>
+</select>
+</div>
+<div class="campo">
+<label>Formato de data</label>
+<select data-pref="formato_data">
+<option value="DD/MM/AAAA">DD/MM/AAAA</option>
+<option value="MM/DD/AAAA">MM/DD/AAAA</option>
+</select>
+</div>
+</div>
+</section>
+<!-- =========================
+             SEGURANÇA
+        ========================== -->
+<section class="config-card">
+<div class="config-titulo">
+<div class="config-icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+<div>
+<h2>Segurança</h2>
+<p>
+                        Gerencie sua senha e mantenha sua conta protegida.
+                    </p>
+</div>
+</div>
+<div class="seguranca">
+<div class="seguranca-info">
+<div class="seguranca-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/></svg></div>
+<div>
+<strong>Senha</strong>
+<span data-config="senha-info">Última alteração há 30 dias</span>
+</div>
+</div>
+<button class="btn-secundario" type="button" data-config="alterar-senha">Alterar senha</button>
+</div>
+<div class="seguranca">
+<div class="seguranca-info">
+<div class="seguranca-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.8-3.4 8-8 9-4.6-1-8-4.2-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+<div>
+<strong>Autenticação em duas etapas</strong>
+<span>
+                            Adicione uma camada extra de segurança à sua conta.
+                        </span>
+</div>
+</div>
+<label class="switch">
+<input data-pref="autenticacao_2fa" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</section>
+<!-- =========================
+             ZONA DA CONTA
+        ========================== -->
+<section class="config-card conta">
+<div>
+<h2>Conta</h2>
+<p>
+                    Ações relacionadas à sua conta no sistema.
+                </p>
+</div>
+<button class="btn-sair" type="button" data-config="sair">
+                Sair da conta
+            </button>
+</section>
+<div class="rodape">
+<span>
+                Safra • Vale do São Francisco
+            </span>
+<span>
+                Última sincronização: <span data-ts="sync">há 15 segundos</span>
+            </span>
+</div>
+</main>
+</section>
+<section class="safra-page" id="alertas" data-page-title="Alertas | Safra">
+
+<!-- =========================
+         SIDEBAR
+    ========================== -->
+<aside class="sidebar" data-componente="sidebar"></aside>
+<!-- =========================
+         CONTEÚDO
+    ========================== -->
+<main class="conteudo">
+<!-- TOPBAR -->
+<header class="topbar tb" data-componente="topbar" data-busca="Buscar alerta..."></header>
+<!-- CABEÇALHO -->
+<section class="cabecalho">
+<div class="titulo-area">
+<div class="titulo-icone"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg></div>
+<div>
+<h1>Alertas</h1>
+<p>
+                        Acompanhe os avisos importantes sobre sua produção, clima e exportação.
+                    </p>
+</div>
+</div>
+<button class="btn-secundario">
+                Marcar todos como lidos
+            </button>
+</section>
+
+<!-- =========================
+             ALERTAS ATIVOS
+        ========================== -->
+<section class="config-card">
+<div class="config-titulo">
+<div class="config-icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="3"/><path d="M8.5 2.5v1.2M2.5 8.5h1.2M4.2 4.2l.9.9M12.8 4.2l-.9.9"/><path d="M18 20H10a3.5 3.5 0 0 1-.3-7A5 5 0 0 1 19.3 14 3 3 0 0 1 18 20z"/></svg></div>
+<div>
+<h2>Condições climáticas</h2>
+<p>
+                        Alterações no clima que podem afetar sua lavoura.
+                    </p>
+</div>
+</div>
+<div class="opcoes" data-alertas="clima">
+<div class="opcao">
+<div>
+<strong>Risco de geada — Talhão 4</strong>
+<span>
+                            Temperatura mínima prevista de 3°C para a madrugada de amanhã.
+                        </span>
+</div>
+</div>
+<div class="opcao">
+<div>
+<strong>Baixa umidade do solo</strong>
+<span>
+                            Umidade abaixo de 30% detectada nos últimos 2 dias.
+                        </span>
+</div>
+</div>
+</div>
+</section>
+
+<section class="config-card">
+<div class="config-titulo">
+<div class="config-icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V12"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 16c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z"/></svg></div>
+<div>
+<h2>Produção</h2>
+<p>
+                        Avisos relacionados ao andamento da sua lavoura.
+                    </p>
+</div>
+</div>
+<div class="opcoes" data-alertas="producao">
+<div class="opcao">
+<div>
+<strong>Colheita dentro do cronograma</strong>
+<span>
+                            A colheita da Uva Vitória segue dentro do prazo ideal.
+                        </span>
+</div>
+</div>
+</div>
+</section>
+
+<section class="config-card">
+<div class="config-titulo">
+<div class="config-icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="M12 4l6 7.5h-6"/><path d="M12 7L7 11.5h5"/><path d="M3.5 15h17l-2 4.5h-13z"/></svg></div>
+<div>
+<h2>Exportação e logística</h2>
+<p>
+                        Avisos sobre lotes, embarques e destinos.
+                    </p>
+</div>
+</div>
+<div class="opcoes" data-alertas="exportacao">
+<div class="opcao">
+<div>
+<strong>Embarque próximo — Lote #024</strong>
+<span>
+                            Embarque programado para 18/09/2026 com destino à Europa.
+                        </span>
+</div>
+</div>
+</div>
+</section>
+
+<div class="rodape">
+<span>
+                Safra • Vale do São Francisco
+            </span>
+<span>
+                Última sincronização: <span data-ts="sync">há 15 segundos</span>
+            </span>
+</div>
+</main>
+</section>
+<section class="safra-page" id="exportacao" data-page-title="Exportação | Safra">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" data-componente="sidebar"></aside>
+<!-- CONTEÚDO -->
+<main class="conteudo">
+<!-- TOPBAR -->
+<header class="topbar tb" data-componente="topbar" data-busca="Buscar lote, destino..."></header>
+<!-- CABEÇALHO -->
+<section class="cabecalho">
+<div class="titulo-area">
+<div class="titulo-icone"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="M12 4l6 7.5h-6"/><path d="M12 7L7 11.5h5"/><path d="M3.5 15h17l-2 4.5h-13z"/></svg></div>
+<div>
+<h1>Exportação</h1>
+<p>
+                        Acompanhe seus lotes, destinos e operações de exportação.
+                    </p>
+</div>
+</div>
+<button class="btn-principal">
+
+                + Novo lote
+
+            </button>
+</section>
+<!-- CARDS -->
+<section class="cards">
+<div class="card-indicador">
+<div class="icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="M12 4l6 7.5h-6"/><path d="M12 7L7 11.5h5"/><path d="M3.5 15h17l-2 4.5h-13z"/></svg></div>
+<div>
+<span>Lotes ativos</span>
+<strong>4</strong>
+<small class="positivo">
+                        Em processo de exportação
+                    </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M6 20h12M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></svg></div>
+<div>
+<span>Volume disponível</span>
+<strong>7.800 kg</strong>
+<small>
+                        Pronto para negociação
+                    </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c3 2.7 3 15.3 0 18-3-2.7-3-15.3 0-18z"/></svg></div>
+<div>
+<span>Destinos ativos</span>
+<strong>3</strong>
+<small>
+                        Europa, EUA e Canadá
+                    </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 7.5C15.8 6.4 14.3 5.8 12 5.8c-2.6 0-4 1.2-4 2.9 0 4.3 8.3 2.1 8.3 6.4 0 1.8-1.7 3.1-4.3 3.1-2.3 0-3.9-.8-4.7-2.1"/></svg></div>
+<div>
+<span>Receita estimada</span>
+<strong>R$ 66.300</strong>
+<small class="positivo">
+                        ↑ 12,4% este ciclo
+                    </small>
+</div>
+</div>
+</section>
+<!-- FILTROS -->
+<section class="filtros">
+<div class="campo">
+<label>Status</label>
+<select>
+<option>Todos</option>
+<option>Em andamento</option>
+<option>Concluído</option>
+<option>Programado</option>
+</select>
+</div>
+<div class="campo">
+<label>Produto</label>
+<select>
+<option>Todos</option>
+<option>Uva</option>
+<option>Manga</option>
+</select>
+</div>
+<div class="campo">
+<label>Destino</label>
+<select>
+<option>Todos</option>
+<option>Europa</option>
+<option>Estados Unidos</option>
+<option>Canadá</option>
+</select>
+</div>
+<button class="btn-filtro">
+
+                Aplicar filtros
+
+            </button>
+</section>
+<!-- LOTE PRINCIPAL -->
+<section class="lote-destaque">
+<div class="lote-topo">
+<div>
+<div class="tags">
+<span class="tag andamento">
+                            EM ANDAMENTO
+                        </span>
+<span class="tag produto">
+                            UVA
+                        </span>
+</div>
+<h2>
+                        Lote #024
+                    </h2>
+<p>
+                        Operação de exportação para o mercado europeu.
+                    </p>
+</div>
+<div class="percentual">
+                    80%
+                </div>
+</div>
+<div class="progresso">
+<div class="progresso-barra">
+<div class="progresso-preenchido"></div>
+</div>
+<span>
+                    Processo de exportação
+                </span>
+</div>
+<div class="lote-informacoes">
+<div class="info">
+<span>Produto</span>
+<strong>Uva</strong>
+</div>
+<div class="info">
+<span>Volume</span>
+<strong>2.500 kg</strong>
+</div>
+<div class="info">
+<span>Destino</span>
+<strong>Europa</strong>
+</div>
+<div class="info">
+<span>Demanda</span>
+<strong class="demanda">
+                        Alta
+                    </strong>
+</div>
+<div class="info">
+<span>Preço estimado</span>
+<strong>
+                        R$ 8,50/kg
+                    </strong>
+</div>
+<button class="btn-lote">
+                    Ver lote
+                </button>
+</div>
+</section>
+<!-- TÍTULO DOS LOTES -->
+<div class="secao-titulo">
+<div>
+<h2>
+                    Operações de exportação
+                </h2>
+<p>
+                    Acompanhe os lotes em processo de envio.
+                </p>
+</div>
+<button class="btn-secundario">
+                Ver todos
+            </button>
+</div>
+<!-- GRID DE LOTES -->
+<section class="lotes-grid">
+<!-- LOTE 025 -->
+<article class="lote-card">
+<div class="lote-card-topo">
+<div>
+<span class="numero-lote">
+                            #025
+                        </span>
+<h3>
+                            Manga Palmer
+                        </h3>
+</div>
+<span class="status programado">
+                        Programado
+                    </span>
+</div>
+<div class="lote-dados">
+<div>
+<span>Volume</span>
+<strong>1.800 kg</strong>
+</div>
+<div>
+<span>Destino</span>
+<strong>Estados Unidos</strong>
+</div>
+<div>
+<span>Preço</span>
+<strong>R$ 7,20/kg</strong>
+</div>
+</div>
+<div class="mini-progresso">
+<div>
+<span>Progresso</span>
+<strong>45%</strong>
+</div>
+<div class="barra">
+<div class="barra-fill quarenta"></div>
+</div>
+</div>
+<button class="btn-card">
+                    Ver detalhes
+                </button>
+</article>
+<!-- LOTE 026 -->
+<article class="lote-card">
+<div class="lote-card-topo">
+<div>
+<span class="numero-lote">
+                            #026
+                        </span>
+<h3>
+                            Uva Itália
+                        </h3>
+</div>
+<span class="status andamento-status">
+                        Em andamento
+                    </span>
+</div>
+<div class="lote-dados">
+<div>
+<span>Volume</span>
+<strong>2.100 kg</strong>
+</div>
+<div>
+<span>Destino</span>
+<strong>Canadá</strong>
+</div>
+<div>
+<span>Preço</span>
+<strong>R$ 8,10/kg</strong>
+</div>
+</div>
+<div class="mini-progresso">
+<div>
+<span>Progresso</span>
+<strong>65%</strong>
+</div>
+<div class="barra">
+<div class="barra-fill sessenta"></div>
+</div>
+</div>
+<button class="btn-card">
+                    Ver detalhes
+                </button>
+</article>
+<!-- LOTE 027 -->
+<article class="lote-card">
+<div class="lote-card-topo">
+<div>
+<span class="numero-lote">
+                            #027
+                        </span>
+<h3>
+                            Uva Vitória
+                        </h3>
+</div>
+<span class="status concluido">
+                        Concluído
+                    </span>
+</div>
+<div class="lote-dados">
+<div>
+<span>Volume</span>
+<strong>1.400 kg</strong>
+</div>
+<div>
+<span>Destino</span>
+<strong>Europa</strong>
+</div>
+<div>
+<span>Preço</span>
+<strong>R$ 8,50/kg</strong>
+</div>
+</div>
+<div class="mini-progresso">
+<div>
+<span>Progresso</span>
+<strong>100%</strong>
+</div>
+<div class="barra">
+<div class="barra-fill cem"></div>
+</div>
+</div>
+<button class="btn-card">
+                    Ver detalhes
+                </button>
+</article>
+</section>
+<!-- MERCADOS -->
+<section class="mercados">
+<div class="secao-titulo">
+<div>
+<h2>
+                        Mercado internacional
+                    </h2>
+<p>
+                        Acompanhe demanda e oportunidades de exportação.
+                    </p>
+</div>
+</div>
+<div class="mercados-grid">
+<div class="mercado">
+<div class="mercado-icone"><span class="ico-sigla">UE</span></div>
+<div>
+<span>
+                            Europa
+                        </span>
+<strong>
+                            Alta demanda
+                        </strong>
+<small class="crescimento">
+                            ↑ 12% este período
+                        </small>
+</div>
+</div>
+<div class="mercado">
+<div class="mercado-icone"><span class="ico-sigla">EUA</span></div>
+<div>
+<span>
+                            Estados Unidos
+                        </span>
+<strong>
+                            Demanda estável
+                        </strong>
+<small>
+                            ↑ 4% este período
+                        </small>
+</div>
+</div>
+<div class="mercado">
+<div class="mercado-icone"><span class="ico-sigla">CA</span></div>
+<div>
+<span>
+                            Canadá
+                        </span>
+<strong>
+                            Demanda em alta
+                        </strong>
+<small class="crescimento">
+                            ↑ 8% este período
+                        </small>
+</div>
+</div>
+</div>
+</section>
+</main>
+</section>
+<section class="safra-page" id="financeiro" data-page-title="Financeiro | Safra">
+
+<!-- ================= SIDEBAR ================= -->
+<aside class="sidebar" data-componente="sidebar"></aside>
+<!-- ================= CONTEÚDO ================= -->
+<main class="conteudo">
+<!-- TOPBAR -->
+<header class="topbar tb" data-componente="topbar" data-busca="Buscar movimentação, pagamento..."></header>
+<!-- ================= CABEÇALHO ================= -->
+<section class="page-header">
+<div class="title-area">
+<div class="title-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v.01M18 14v.01"/></svg></div>
+<div>
+<h1>Financeiro</h1>
+<p>
+                        Acompanhe as receitas, despesas e resultados da sua produção agrícola.
+                    </p>
+</div>
+</div>
+<button class="btn-primary">
+<span>+</span>
+                Nova movimentação
+            </button>
+</section>
+<!-- ================= CARDS ================= -->
+<section class="financial-cards">
+<!-- Receita -->
+<div class="financial-card">
+<div class="card-icon green"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+<div class="card-content">
+<span>Receita no ciclo</span>
+<strong>R$ 2.480.650</strong>
+<small class="positive">
+                        ↑ 15% em relação ao ciclo anterior
+                    </small>
+</div>
+</div>
+<!-- Despesas -->
+<div class="financial-card">
+<div class="card-icon red"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/></svg></div>
+<div class="card-content">
+<span>Despesas</span>
+<strong>R$ 684.320</strong>
+<small>
+                        27,6% da receita
+                    </small>
+</div>
+</div>
+<!-- Resultado -->
+<div class="financial-card">
+<div class="card-icon blue"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 7.5C15.8 6.4 14.3 5.8 12 5.8c-2.6 0-4 1.2-4 2.9 0 4.3 8.3 2.1 8.3 6.4 0 1.8-1.7 3.1-4.3 3.1-2.3 0-3.9-.8-4.7-2.1"/></svg></div>
+<div class="card-content">
+<span>Resultado líquido</span>
+<strong>R$ 1.796.330</strong>
+<small class="positive">
+                        ↑ 18,4% este ciclo
+                    </small>
+</div>
+</div>
+<!-- A receber -->
+<div class="financial-card">
+<div class="card-icon yellow"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+<div class="card-content">
+<span>A receber</span>
+<strong>R$ 420.800</strong>
+<small>
+                        Próximos 30 dias
+                    </small>
+</div>
+</div>
+</section>
+<!-- ================= ÁREA DOS GRÁFICOS ================= -->
+<section class="charts-grid">
+<!-- FLUXO FINANCEIRO -->
+<div class="chart-card fluxo-card">
+<div class="chart-header">
+<div>
+<h2>Fluxo financeiro</h2>
+<p>
+                            Receitas e despesas da produção
+                        </p>
+</div>
+<select>
+<option>Últimos 6 meses</option>
+<option>Últimos 12 meses</option>
+<option>Este ano</option>
+</select>
+</div>
+<div class="chart-summary">
+<div>
+<span>Receita</span>
+<strong class="green-text">R$ 2,48 mi</strong>
+</div>
+<div>
+<span>Despesas</span>
+<strong class="orange-text">R$ 684 mil</strong>
+</div>
+</div>
+<!-- Gráfico -->
+<div class="bar-chart">
+<div class="grid-line line-1"></div>
+<div class="grid-line line-2"></div>
+<div class="grid-line line-3"></div>
+<div class="grid-line line-4"></div>
+<div class="bars">
+<div class="month">
+<div class="bar-group">
+<div class="bar receita b1"></div>
+<div class="bar despesa d1"></div>
+</div>
+<span>Nov</span>
+</div>
+<div class="month">
+<div class="bar-group">
+<div class="bar receita b2"></div>
+<div class="bar despesa d2"></div>
+</div>
+<span>Dez</span>
+</div>
+<div class="month">
+<div class="bar-group">
+<div class="bar receita b3"></div>
+<div class="bar despesa d3"></div>
+</div>
+<span>Jan</span>
+</div>
+<div class="month">
+<div class="bar-group">
+<div class="bar receita b4"></div>
+<div class="bar despesa d4"></div>
+</div>
+<span>Fev</span>
+</div>
+<div class="month">
+<div class="bar-group">
+<div class="bar receita b5"></div>
+<div class="bar despesa d5"></div>
+</div>
+<span>Mar</span>
+</div>
+<div class="month">
+<div class="bar-group">
+<div class="bar receita b6"></div>
+<div class="bar despesa d6"></div>
+</div>
+<span>Abr</span>
+</div>
+</div>
+</div>
+<div class="chart-legend">
+<span>
+<i class="legend-green"></i>
+                        Receita
+                    </span>
+<span>
+<i class="legend-orange"></i>
+                        Despesas
+                    </span>
+</div>
+</div>
+<!-- DISTRIBUIÇÃO DAS DESPESAS -->
+<div class="chart-card expenses-card">
+<div class="chart-header">
+<div>
+<h2>Distribuição das despesas</h2>
+<p>
+                            Por categoria
+                        </p>
+</div>
+</div>
+<div class="donut-area">
+<div class="donut">
+<div class="donut-center">
+<strong>R$ 684k</strong>
+<span>total</span>
+</div>
+</div>
+</div>
+<div class="expense-list">
+<div class="expense-item">
+<div>
+<i class="dot dot-green"></i>
+                            Insumos
+                        </div>
+<strong>38%</strong>
+</div>
+<div class="expense-item">
+<div>
+<i class="dot dot-blue"></i>
+                            Mão de obra
+                        </div>
+<strong>27%</strong>
+</div>
+<div class="expense-item">
+<div>
+<i class="dot dot-yellow"></i>
+                            Logística
+                        </div>
+<strong>20%</strong>
+</div>
+<div class="expense-item">
+<div>
+<i class="dot dot-purple"></i>
+                            Outros
+                        </div>
+<strong>15%</strong>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= MOVIMENTAÇÕES ================= -->
+<section class="transactions-section">
+<div class="section-title">
+<div>
+<h2>Movimentações recentes</h2>
+<p>
+                        Últimos lançamentos financeiros da sua propriedade.
+                    </p>
+</div>
+<a href="#">
+                    Ver todas →
+                </a>
+</div>
+<div class="transactions-card">
+<!-- Cabeçalho -->
+<div class="transaction-row header">
+<span>DESCRIÇÃO</span>
+<span>CATEGORIA</span>
+<span>DATA</span>
+<span>STATUS</span>
+<span>VALOR</span>
+</div>
+<!-- Receita -->
+<div class="transaction-row">
+<div class="transaction-description">
+<div class="transaction-icon revenue"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+<div>
+<strong>Venda de Uva Vitória</strong>
+<small>Lote #024</small>
+</div>
+</div>
+<span>Venda</span>
+<span>10/09/2026</span>
+<span class="status completed">
+                        • Recebido
+                    </span>
+<strong class="value positive-value">
+                        + R$ 21.250
+                    </strong>
+</div>
+<!-- Despesa -->
+<div class="transaction-row">
+<div class="transaction-description">
+<div class="transaction-icon expense"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/></svg></div>
+<div>
+<strong>Compra de fertilizantes</strong>
+<small>Fornecedor agrícola</small>
+</div>
+</div>
+<span>Insumos</span>
+<span>08/09/2026</span>
+<span class="status paid">
+                        • Pago
+                    </span>
+<strong class="value negative-value">
+                        - R$ 8.450
+                    </strong>
+</div>
+<!-- Exportação -->
+<div class="transaction-row">
+<div class="transaction-description">
+<div class="transaction-icon export"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="M12 4l6 7.5h-6"/><path d="M12 7L7 11.5h5"/><path d="M3.5 15h17l-2 4.5h-13z"/></svg></div>
+<div>
+<strong>Exportação Lote #024</strong>
+<small>Europa</small>
+</div>
+</div>
+<span>Exportação</span>
+<span>05/09/2026</span>
+<span class="status pending">
+                        • Pendente
+                    </span>
+<strong class="value positive-value">
+                        + R$ 66.300
+                    </strong>
+</div>
+<!-- Transporte -->
+<div class="transaction-row">
+<div class="transaction-description">
+<div class="transaction-icon transport"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5h11v9.5h-11zM13.5 9.5h4l4 3.5v3h-8z"/><circle cx="7" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/></svg></div>
+<div>
+<strong>Transporte da produção</strong>
+<small>Fazenda → Porto</small>
+</div>
+</div>
+<span>Logística</span>
+<span>03/09/2026</span>
+<span class="status paid">
+                        • Pago
+                    </span>
+<strong class="value negative-value">
+                        - R$ 4.280
+                    </strong>
+</div>
+</div>
+</section>
+<!-- ================= RESUMO ================= -->
+<section class="bottom-grid">
+<div class="info-card">
+<div class="info-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div>
+<div>
+<strong>Resultado positivo</strong>
+<p>
+                        Seu resultado líquido aumentou 18,4% em relação ao ciclo anterior.
+                    </p>
+</div>
+</div>
+<div class="info-card">
+<div class="info-icon yellow-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 7.5C15.8 6.4 14.3 5.8 12 5.8c-2.6 0-4 1.2-4 2.9 0 4.3 8.3 2.1 8.3 6.4 0 1.8-1.7 3.1-4.3 3.1-2.3 0-3.9-.8-4.7-2.1"/></svg></div>
+<div>
+<strong>Próximos recebimentos</strong>
+<p>
+                        Você possui R$ 420.800 em valores previstos para os próximos 30 dias.
+                    </p>
+</div>
+</div>
+</section>
+</main>
+</section>
+<section class="safra-page" id="lavoura" data-page-title="Safra - Minhas Lavouras">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" data-componente="sidebar"></aside>
+<!-- CONTEÚDO -->
+<main class="conteudo">
+<!-- TOPBAR -->
+<header class="topbar tb" data-componente="topbar" data-busca="Buscar por lavoura, talhão..."></header>
+<!-- CABEÇALHO DA PÁGINA -->
+<section class="page-header">
+<div class="title-area">
+<div class="title-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V12"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 16c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z"/></svg></div>
+<div>
+<h1>Minhas lavouras</h1>
+<p>
+                        Acompanhe o desenvolvimento e as condições de cada área da sua propriedade.
+                    </p>
+</div>
+</div>
+<button class="btn-primary">
+<span>+</span>
+                Nova lavoura
+            </button>
+</section>
+<!-- CARDS DE RESUMO -->
+<section class="stats-grid">
+<div class="stat-card">
+<div class="stat-icon green"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V12"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 16c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z"/></svg></div>
+<div class="stat-content">
+<span>Lavouras ativas</span>
+<strong>8</strong>
+<small>de 10 cadastradas</small>
+</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon blue"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg></div>
+<div class="stat-content">
+<span>Área total</span>
+<strong>120,5 ha</strong>
+<small class="positive">↑ 12% este ciclo</small>
+</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon yellow"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+<div class="stat-content">
+<span>Em colheita</span>
+<strong>3</strong>
+<small>talhões nesta semana</small>
+</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon purple"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 4 6 7.2 6 11a6 6 0 0 1-12 0c0-3.8 3-7 6-11z"/></svg></div>
+<div class="stat-content">
+<span>Irrigação</span>
+<strong>94%</strong>
+<small class="positive">Sistema normal</small>
+</div>
+</div>
+</section>
+<!-- FILTROS -->
+<section class="filters-area">
+<div class="filter-buttons">
+<button class="filter active">
+                    Todas
+                    <span>8</span>
+</button>
+<button class="filter">
+                    Em desenvolvimento
+                    <span>3</span>
+</button>
+<button class="filter">
+                    Em colheita
+                    <span>3</span>
+</button>
+<button class="filter">
+                    Preparação
+                    <span>2</span>
+</button>
+</div>
+<select class="order-select">
+<option>Mais recentes</option>
+<option>Mais antigas</option>
+<option>Maior área</option>
+<option>Maior produção</option>
+</select>
+</section>
+<!-- CARDS DAS LAVOURAS -->
+<section class="lavouras-grid">
+<!-- UVA VITÓRIA -->
+<article class="lavoura-card">
+<div class="card-top">
+<span class="status status-colheita">
+                        • Em colheita
+                    </span>
+<button class="favorite">
+                        <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>
+                    </button>
+</div>
+<div class="lavoura-image uva">
+                    <svg class="ico ico-fruta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.5" cy="10" r="2"/><circle cx="12" cy="10" r="2"/><circle cx="15.5" cy="10" r="2"/><circle cx="10.2" cy="14" r="2"/><circle cx="13.8" cy="14" r="2"/><circle cx="12" cy="18" r="2"/><path d="M12 8V5"/><path d="M12 5.500c1-1.800 2.800-2.500 4.500-2.200"/></svg>
+                </div>
+<div class="lavoura-info">
+<span class="talhao">
+                        TALHÃO 01
+                    </span>
+<h2>Uva Vitória</h2>
+<div class="lavoura-details">
+<div>
+<span>Área</span>
+<strong>24,5 ha</strong>
+</div>
+<div>
+<span>Produção estimada</span>
+<strong>185 ton</strong>
+</div>
+</div>
+<div class="progress-header">
+<span>Progresso da colheita</span>
+<strong>82%</strong>
+</div>
+<div class="progress">
+<div style="width:82%"></div>
+</div>
+<div class="card-footer">
+<span>Atualizado hoje</span>
+<button>Ver detalhes →</button>
+</div>
+</div>
+</article>
+<!-- MANGA PALMER -->
+<article class="lavoura-card">
+<div class="card-top">
+<span class="status status-desenvolvimento">
+                        • Em desenvolvimento
+                    </span>
+<button class="favorite">
+                        <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>
+                    </button>
+</div>
+<div class="lavoura-image manga">
+                    <svg class="ico ico-fruta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="13.5" rx="5.5" ry="8" transform="rotate(38 12 13.5)"/><path d="M10 6.5c.3-2 1.800-3.300 4-3.800"/></svg>
+                </div>
+<div class="lavoura-info">
+<span class="talhao">
+                        TALHÃO 02
+                    </span>
+<h2>Manga Palmer</h2>
+<div class="lavoura-details">
+<div>
+<span>Área</span>
+<strong>32,8 ha</strong>
+</div>
+<div>
+<span>Produção estimada</span>
+<strong>260 ton</strong>
+</div>
+</div>
+<div class="progress-header">
+<span>Desenvolvimento</span>
+<strong>68%</strong>
+</div>
+<div class="progress">
+<div style="width:68%"></div>
+</div>
+<div class="card-footer">
+<span>Atualizado hoje</span>
+<button>Ver detalhes →</button>
+</div>
+</div>
+</article>
+<!-- UVA ITÁLIA -->
+<article class="lavoura-card">
+<div class="card-top">
+<span class="status status-desenvolvimento">
+                        • Em desenvolvimento
+                    </span>
+<button class="favorite">
+                        <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>
+                    </button>
+</div>
+<div class="lavoura-image uva">
+                    <svg class="ico ico-fruta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.5" cy="10" r="2"/><circle cx="12" cy="10" r="2"/><circle cx="15.5" cy="10" r="2"/><circle cx="10.2" cy="14" r="2"/><circle cx="13.8" cy="14" r="2"/><circle cx="12" cy="18" r="2"/><path d="M12 8V5"/><path d="M12 5.500c1-1.800 2.800-2.500 4.500-2.200"/></svg>
+                </div>
+<div class="lavoura-info">
+<span class="talhao">
+                        TALHÃO 03
+                    </span>
+<h2>Uva Itália</h2>
+<div class="lavoura-details">
+<div>
+<span>Área</span>
+<strong>18,2 ha</strong>
+</div>
+<div>
+<span>Produção estimada</span>
+<strong>132 ton</strong>
+</div>
+</div>
+<div class="progress-header">
+<span>Desenvolvimento</span>
+<strong>54%</strong>
+</div>
+<div class="progress">
+<div style="width:54%"></div>
+</div>
+<div class="card-footer">
+<span>Atualizado ontem</span>
+<button>Ver detalhes →</button>
+</div>
+</div>
+</article>
+<!-- MANGA TOMMY -->
+<article class="lavoura-card">
+<div class="card-top">
+<span class="status status-preparacao">
+                        • Preparação
+                    </span>
+<button class="favorite">
+                        <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>
+                    </button>
+</div>
+<div class="lavoura-image manga">
+                    <svg class="ico ico-fruta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="13.5" rx="5.5" ry="8" transform="rotate(38 12 13.5)"/><path d="M10 6.5c.3-2 1.800-3.300 4-3.800"/></svg>
+                </div>
+<div class="lavoura-info">
+<span class="talhao">
+                        TALHÃO 04
+                    </span>
+<h2>Manga Tommy</h2>
+<div class="lavoura-details">
+<div>
+<span>Área</span>
+<strong>45,0 ha</strong>
+</div>
+<div>
+<span>Produção estimada</span>
+<strong>265 ton</strong>
+</div>
+</div>
+<div class="progress-header">
+<span>Preparação</span>
+<strong>32%</strong>
+</div>
+<div class="progress">
+<div style="width:32%"></div>
+</div>
+<div class="card-footer">
+<span>Atualizado ontem</span>
+<button>Ver detalhes →</button>
+</div>
+</div>
+</article>
+</section>
+<!-- RESUMO INFERIOR -->
+<section class="bottom-grid">
+<div class="summary-card">
+<div class="summary-title">
+<div>
+<h2>Resumo das lavouras</h2>
+<p>Visão geral do ciclo atual.</p>
+</div>
+<span class="summary-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V12"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 16c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z"/></svg></span>
+</div>
+<div class="summary-row">
+<span>Área em produção</span>
+<strong>75,5 ha</strong>
+</div>
+<div class="summary-row">
+<span>Produção prevista</span>
+<strong>842,3 ton</strong>
+</div>
+<div class="summary-row">
+<span>Talhões em colheita</span>
+<strong>3</strong>
+</div>
+</div>
+<div class="irrigacao-card">
+<div class="summary-title">
+<div>
+<h2>Condições de irrigação</h2>
+<p>Sistema de irrigação das propriedades.</p>
+</div>
+<span class="summary-icon blue-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 4 6 7.2 6 11a6 6 0 0 1-12 0c0-3.8 3-7 6-11z"/></svg></span>
+</div>
+<div class="irrigacao-value">
+<strong>94%</strong>
+<span>Eficiência</span>
+</div>
+<div class="irrigacao-bar">
+<div></div>
+</div>
+<p class="normal">
+                    ● Sistema funcionando normalmente
+                </p>
+</div>
+</section>
+</main>
+</section>
+<section class="safra-page" id="relatorio" data-page-title="Relatórios | Safra">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" data-componente="sidebar"></aside>
+<!-- CONTEÚDO PRINCIPAL -->
+<main class="conteudo">
+<!-- TOPBAR -->
+<header class="topbar tb" data-componente="topbar" data-busca="Buscar relatório..."></header>
+<!-- CABEÇALHO -->
+<section class="cabecalho">
+<div class="titulo-area">
+<div class="titulo-icone"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V11M10 20V4M16 20v-6M21 20H3"/></svg></div>
+<div>
+<h1>Relatórios</h1>
+<p>
+                        Acompanhe os principais indicadores da sua produção agrícola.
+                    </p>
+</div>
+</div>
+<button class="btn-principal">
+<span>+</span>
+                Gerar relatório
+            </button>
+</section>
+<!-- ABAS -->
+<div class="abas">
+<button class="aba ativa" data-aba="producao">
+                Produção
+            </button>
+<button class="aba" data-aba="financeiro">
+                Financeiro
+            </button>
+<button class="aba" data-aba="clima">
+                Clima
+            </button>
+<button class="aba" data-aba="exportacao">
+                Exportação
+            </button>
+</div>
+<!-- ================================================= -->
+<!-- ABA PRODUÇÃO -->
+<!-- ================================================= -->
+<section class="aba-conteudo ativa" id="aba-producao">
+<!-- FILTROS -->
+<div class="filtros">
+<div class="campo">
+<label>Período</label>
+<select>
+<option>Últimos 6 meses</option>
+<option>Últimos 30 dias</option>
+<option>Últimos 7 dias</option>
+<option>Último ano</option>
+</select>
+</div>
+<div class="campo">
+<label>Lavoura</label>
+<select>
+<option>Todas as lavouras</option>
+<option>Uva Vitória</option>
+<option>Manga Palmer</option>
+<option>Uva Itália</option>
+</select>
+</div>
+<button class="btn-filtro">
+                    Aplicar filtros
+                </button>
+</div>
+<!-- CARDS -->
+<div class="cards">
+<div class="card-indicador">
+<div class="icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+<div>
+<span>Produção total</span>
+<strong>842,3 ton</strong>
+<small class="positivo">
+                            ↑ 8,4% este ciclo
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg></div>
+<div>
+<span>Área cultivada</span>
+<strong>120,5 ha</strong>
+<small>
+                            8 lavouras ativas
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 7.5C15.8 6.4 14.3 5.8 12 5.8c-2.6 0-4 1.2-4 2.9 0 4.3 8.3 2.1 8.3 6.4 0 1.8-1.7 3.1-4.3 3.1-2.3 0-3.9-.8-4.7-2.1"/></svg></div>
+<div>
+<span>Receita gerada</span>
+<strong>R$ 2,48 mi</strong>
+<small class="positivo">
+                            ↑ 12,6%
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg></div>
+<div>
+<span>Eficiência média</span>
+<strong>94%</strong>
+<small class="positivo">
+                            ↑ 2,1%
+                        </small>
+</div>
+</div>
+</div>
+<!-- GRÁFICOS -->
+<div class="grid-relatorios">
+<div class="card grafico-card">
+<div class="card-topo">
+<div>
+<h2>Desempenho da produção</h2>
+<p>Produção registrada nos últimos 6 meses</p>
+</div>
+<select class="select-pequeno">
+<option>Últimos 6 meses</option>
+<option>Últimos 30 dias</option>
+</select>
+</div>
+<div class="valores-grafico">
+<div>
+<span>Produção</span>
+<strong>842,3 ton</strong>
+</div>
+<div>
+<span>Meta</span>
+<strong class="meta">900 ton</strong>
+</div>
+</div>
+<div class="grafico-barras">
+<div class="grupo">
+<div class="barra producao" style="height: 58%;"></div>
+<div class="barra meta-barra" style="height: 72%;"></div>
+<small>Mai</small>
+</div>
+<div class="grupo">
+<div class="barra producao" style="height: 48%;"></div>
+<div class="barra meta-barra" style="height: 68%;"></div>
+<small>Jun</small>
+</div>
+<div class="grupo">
+<div class="barra producao" style="height: 65%;"></div>
+<div class="barra meta-barra" style="height: 75%;"></div>
+<small>Jul</small>
+</div>
+<div class="grupo">
+<div class="barra producao" style="height: 60%;"></div>
+<div class="barra meta-barra" style="height: 76%;"></div>
+<small>Ago</small>
+</div>
+<div class="grupo">
+<div class="barra producao" style="height: 79%;"></div>
+<div class="barra meta-barra" style="height: 82%;"></div>
+<small>Set</small>
+</div>
+<div class="grupo">
+<div class="barra producao" style="height: 88%;"></div>
+<div class="barra meta-barra" style="height: 92%;"></div>
+<small>Out</small>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-topo">
+<div>
+<h2>Produção por lavoura</h2>
+<p>Distribuição da produção</p>
+</div>
+</div>
+<div class="lista-producao">
+<div class="item-producao">
+<div class="item-nome">
+<span>Uva Vitória</span>
+<strong>356 ton</strong>
+</div>
+<div class="linha">
+<span style="width: 88%;"></span>
+</div>
+</div>
+<div class="item-producao">
+<div class="item-nome">
+<span>Manga Palmer</span>
+<strong>284 ton</strong>
+</div>
+<div class="linha">
+<span style="width: 70%;"></span>
+</div>
+</div>
+<div class="item-producao">
+<div class="item-nome">
+<span>Uva Itália</span>
+<strong>202 ton</strong>
+</div>
+<div class="linha">
+<span style="width: 52%;"></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ================================================= -->
+<!-- ABA FINANCEIRO -->
+<!-- ================================================= -->
+<section class="aba-conteudo" id="aba-financeiro">
+<div class="cards">
+<div class="card-indicador">
+<div class="icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+<div>
+<span>Receita no ciclo</span>
+<strong>R$ 2.480.650</strong>
+<small class="positivo">
+                            ↑ 15% em relação ao ciclo anterior
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone vermelho"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/></svg></div>
+<div>
+<span>Despesas</span>
+<strong>R$ 684.320</strong>
+<small>
+                            27,6% da receita
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 7.5C15.8 6.4 14.3 5.8 12 5.8c-2.6 0-4 1.2-4 2.9 0 4.3 8.3 2.1 8.3 6.4 0 1.8-1.7 3.1-4.3 3.1-2.3 0-3.9-.8-4.7-2.1"/></svg></div>
+<div>
+<span>Resultado líquido</span>
+<strong>R$ 1.796.330</strong>
+<small class="positivo">
+                            ↑ 18,4% este ciclo
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+<div>
+<span>A receber</span>
+<strong>R$ 420.800</strong>
+<small>
+                            Próximos 30 dias
+                        </small>
+</div>
+</div>
+</div>
+<div class="card resumo-financeiro">
+<h2>Resumo financeiro</h2>
+<p>
+                    Confira os principais resultados financeiros da produção.
+                </p>
+<div class="financeiro-linha">
+<div>
+<span>Receita</span>
+<strong>R$ 2,48 mi</strong>
+</div>
+<div>
+<span>Despesas</span>
+<strong>R$ 684 mil</strong>
+</div>
+<div>
+<span>Resultado</span>
+<strong>R$ 1,79 mi</strong>
+</div>
+</div>
+</div>
+</section>
+<!-- ================================================= -->
+<!-- ABA CLIMA -->
+<!-- ================================================= -->
+<section class="aba-conteudo" id="aba-clima">
+<div class="cards">
+<div class="card-indicador">
+<div class="icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></div>
+<div>
+<span>Temperatura</span>
+<strong data-ts="temperatura">28°C</strong>
+<small data-ts="atualizado">
+                            Atualizado há 15 segundos
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg></div>
+<div>
+<span>Umidade</span>
+<strong data-ts="umidade">68%</strong>
+<small data-ts="condicao-umidade">
+                            Condição normal
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H7a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 10.5 4.25 4.25 0 0 1 17.5 19z"/></svg></div>
+<div>
+<span>Condição climática</span>
+<strong>Favorável</strong>
+<small class="positivo">
+                            Boa para produção
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+<div>
+<span>Previsão</span>
+<strong data-api="previsao-24h">--°C</strong>
+<small>
+                            Próximas 24 horas
+                        </small>
+</div>
+</div>
+</div>
+<div class="grid-clima">
+
+<!-- TEMPERATURA -->
+<article class="card clima-grafico clima-temperatura">
+<div class="card-topo">
+<div class="clima-titulo">
+<span class="clima-chip amarelo" aria-hidden="true"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></span>
+<div>
+<h2>Temperatura</h2>
+<p>Últimas leituras do sensor</p>
+</div>
+</div>
+<div class="clima-atual">
+<strong data-ts="temperatura">--°C</strong>
+<span>agora</span>
+</div>
+</div>
+<div class="clima-resumo">
+<div><span>Mínima</span><strong data-ts="temperatura-min">--</strong></div>
+<div><span>Média</span><strong data-ts="temperatura-media">--</strong></div>
+<div><span>Máxima</span><strong data-ts="temperatura-max">--</strong></div>
+</div>
+<div class="grafico-clima" data-ts-grafico="temperatura">
+<p class="clima-vazio">Aguardando leituras do sensor...</p>
+</div>
+</article>
+
+<!-- UMIDADE -->
+<article class="card clima-grafico clima-umidade">
+<div class="card-topo">
+<div class="clima-titulo">
+<span class="clima-chip azul" aria-hidden="true">%</span>
+<div>
+<h2>Umidade</h2>
+<p>Últimas leituras do sensor</p>
+</div>
+</div>
+<div class="clima-atual">
+<strong data-ts="umidade">--%</strong>
+<span>agora</span>
+</div>
+</div>
+<div class="clima-resumo">
+<div><span>Mínima</span><strong data-ts="umidade-min">--</strong></div>
+<div><span>Média</span><strong data-ts="umidade-media">--</strong></div>
+<div><span>Máxima</span><strong data-ts="umidade-max">--</strong></div>
+</div>
+<div class="grafico-clima" data-ts-grafico="umidade">
+<p class="clima-vazio">Aguardando leituras do sensor...</p>
+</div>
+</article>
+
+</div>
+</section>
+<!-- ================================================= -->
+<!-- ABA EXPORTAÇÃO -->
+<!-- ================================================= -->
+<section class="aba-conteudo" id="aba-exportacao">
+<div class="exportacao-topo">
+<div>
+<h2>Relatório de Exportação</h2>
+<p>
+                        Acompanhe os lotes, destinos, preços e andamento
+                        das operações de exportação.
+                    </p>
+</div>
+<button class="btn-secundario">
+                    Exportar relatório
+                </button>
+</div>
+<!-- CARDS EXPORTAÇÃO -->
+<div class="cards">
+<div class="card-indicador">
+<div class="icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>
+<div>
+<span>Lotes ativos</span>
+<strong>4</strong>
+<small>
+                            Em processo de exportação
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M6 20h12M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></svg></div>
+<div>
+<span>Volume disponível</span>
+<strong>7.800 kg</strong>
+<small>
+                            Pronto para negociação
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 7.5C15.8 6.4 14.3 5.8 12 5.8c-2.6 0-4 1.2-4 2.9 0 4.3 8.3 2.1 8.3 6.4 0 1.8-1.7 3.1-4.3 3.1-2.3 0-3.9-.8-4.7-2.1"/></svg></div>
+<div>
+<span>Preço médio</span>
+<strong>R$ 8,50/kg</strong>
+<small class="positivo">
+                            Demanda alta
+                        </small>
+</div>
+</div>
+<div class="card-indicador">
+<div class="icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c3 2.7 3 15.3 0 18-3-2.7-3-15.3 0-18z"/></svg></div>
+<div>
+<span>Destinos</span>
+<strong>3</strong>
+<small>
+                            Mercados internacionais
+                        </small>
+</div>
+</div>
+</div>
+<!-- LOTE -->
+<div class="card lote-card">
+<div class="lote-cabecalho">
+<div>
+<span class="numero-lote">
+                            LOTE #024
+                        </span>
+<h2>Uva</h2>
+<p>
+                            Lote disponível para exportação
+                        </p>
+</div>
+<span class="status">
+                        Em andamento
+                    </span>
+</div>
+<div class="dados-lote">
+<div>
+<span>Produto</span>
+<strong>Uva</strong>
+</div>
+<div>
+<span>Volume</span>
+<strong>2.500 kg</strong>
+</div>
+<div>
+<span>Destino</span>
+<strong>Europa</strong>
+</div>
+<div>
+<span>Demanda</span>
+<strong class="texto-verde">Alta</strong>
+</div>
+<div>
+<span>Preço</span>
+<strong>R$ 8,50/kg</strong>
+</div>
+</div>
+<div class="progresso">
+<div class="progresso-topo">
+<span>
+                            Progresso da exportação
+                        </span>
+<strong>
+                            80%
+                        </strong>
+</div>
+<div class="barra-progresso">
+<span></span>
+</div>
+</div>
+<div class="lote-footer">
+<div>
+<span>Previsão de embarque</span>
+<strong>18/09/2026</strong>
+</div>
+<button class="btn-lote">
+                        Ver lote
+                    </button>
+</div>
+</div>
+<!-- PARTE INFERIOR -->
+<div class="grid-exportacao">
+<div class="card">
+<div class="card-topo">
+<div>
+<h2>Destinos de exportação</h2>
+<p>Distribuição dos lotes</p>
+</div>
+</div>
+<div class="destinos">
+<div class="destino">
+<div class="destino-info">
+<span>Europa</span>
+<strong>2.500 kg</strong>
+</div>
+<div class="mini-barra">
+<span style="width: 82%;"></span>
+</div>
+</div>
+<div class="destino">
+<div class="destino-info">
+<span>Estados Unidos</span>
+<strong>3.100 kg</strong>
+</div>
+<div class="mini-barra">
+<span style="width: 67%;"></span>
+</div>
+</div>
+<div class="destino">
+<div class="destino-info">
+<span>Canadá</span>
+<strong>2.200 kg</strong>
+</div>
+<div class="mini-barra">
+<span style="width: 48%;"></span>
+</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-topo">
+<div>
+<h2>Demanda internacional</h2>
+<p>Variação do mercado</p>
+</div>
+</div>
+<div class="demanda">
+<div>
+<span>Europa</span>
+<strong>+12%</strong>
+</div>
+<div>
+<span>Estados Unidos</span>
+<strong>+8%</strong>
+</div>
+<div>
+<span>Canadá</span>
+<strong>+5%</strong>
+</div>
+</div>
+<div class="aviso-demanda">
+                        ↑ Demanda internacional em alta
+                    </div>
+</div>
+</div>
+</section>
+</main>
+<!-- SCRIPT DAS ABAS -->
+
+</section>
+<section class="safra-page" id="telainicial" data-page-title="Safra - Dashboard">
+<aside class="sidebar" data-componente="sidebar"></aside>
+<!-- ================= CONTEÚDO ================= -->
+<main class="conteudo">
+<!-- TOPBAR -->
+<header class="topbar tb" data-componente="topbar" data-busca="Buscar por lavoura, talhão, produto..."></header>
+<!-- ================= CABEÇALHO ================= -->
+<section class="boas-vindas">
+<div class="titulo-area">
+<div class="folha-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V12"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 16c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z"/></svg></div>
+<div>
+<h1>Bem-vindo, João!</h1>
+<p>
+                        Aqui você acompanha o desempenho da sua produção<br/>
+                        e tem tudo o que precisa para tomar as melhores decisões.
+                    </p>
+</div>
+</div>
+<div class="informacoes">
+<div class="data-box">
+                    <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+                    <span data-api="data-hoje">Hoje</span>
+</div>
+<div class="temperatura-top">
+                    <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+                    <div>
+<strong data-api="clima-temp-topo" title="Fonte: Open-Meteo (modelo)">--°C</strong>
+<small data-api="clima-condicao-topo">Carregando…</small>
+</div>
+</div>
+<span class="localizacao">
+                    <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg> Petrolina - PE
+                </span>
+</div>
+</section>
+<!-- ================= CARDS ================= -->
+<section class="cards">
+<div class="card">
+<div class="card-icon verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V12"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 16c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z"/></svg></div>
+<div class="card-info">
+<span data-api="card-area-rotulo">Área colhida</span>
+<strong data-api="card-area">--</strong>
+<small data-api="card-area-sub">Carregando…</small>
+</div>
+</div>
+<div class="card">
+<div class="card-icon azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 4 6 7.2 6 11a6 6 0 0 1-12 0c0-3.8 3-7 6-11z"/></svg></div>
+<div class="card-info">
+<span>Produção estimada</span>
+<strong data-api="card-producao">--</strong>
+<small data-api="card-producao-sub">Carregando…</small>
+</div>
+</div>
+<div class="card">
+<div class="card-icon amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 7.5C15.8 6.4 14.3 5.8 12 5.8c-2.6 0-4 1.2-4 2.9 0 4.3 8.3 2.1 8.3 6.4 0 1.8-1.7 3.1-4.3 3.1-2.3 0-3.9-.8-4.7-2.1"/></svg></div>
+<div class="card-info">
+<span>Receita potencial (exportação)</span>
+<strong data-api="card-receita">--</strong>
+<small data-api="card-receita-sub">Carregando…</small>
+</div>
+</div>
+<div class="card">
+<div class="card-icon roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></div>
+<div class="card-info">
+<span>Produtividade prevista</span>
+<strong data-api="card-produtividade">--</strong>
+<small data-api="card-produtividade-sub">Carregando…</small>
+</div>
+</div>
+</section>
+<!-- ================= ÁREA PRINCIPAL ================= -->
+<section class="grid-principal">
+<!-- COLHEITA -->
+<div class="card-colheita">
+<div class="check-circle">
+                    <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                </div>
+<h2 data-api="colheita-titulo">Avaliando<br/>previsão</h2>
+<p data-api="colheita-texto">
+                    Consultando o Open-Meteo…
+                </p>
+<button>
+                    Ver detalhes →
+                </button>
+<div class="forma-verde"></div>
+</div>
+<!-- GRÁFICO -->
+<div class="card-grafico">
+<div class="grafico-header">
+<div>
+<h3><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg> Previsão do tempo — próximos 7 dias</h3>
+</div>
+<small>Fonte: Open-Meteo</small>
+</div>
+<div class="grafico">
+<div class="linha linha1"></div>
+<div class="linha linha2"></div>
+<div class="linha linha3"></div>
+<div class="linha linha4"></div>
+<svg preserveAspectRatio="none" viewBox="0 0 500 220" data-api="prev-grafico"></svg>
+</div>
+<div data-api="prev-dias" style="display:flex;justify-content:space-between;gap:4px;font-size:12px;text-align:center;margin-top:6px"></div>
+<div class="legenda">
+<span>
+<i class="bolinha-verde"></i>
+                        Máxima (°C)
+                    </span>
+<span>
+<i class="bolinha-cinza"></i>
+                        Mínima (°C)
+                    </span>
+</div>
+</div>
+<!-- CLIMA -->
+<div class="card-clima">
+<div class="clima-header">
+<h3><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg> Clima e condições</h3>
+<span>→</span>
+</div>
+<div class="clima-info">
+<div class="temp-grande" title="Fonte: Open-Meteo (modelo)">
+<strong data-api="clima-temp">--°C</strong>
+<small data-api="clima-condicao">Carregando…</small>
+</div>
+<div class="dados-clima">
+<p>
+                            <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 4 6 7.2 6 11a6 6 0 0 1-12 0c0-3.8 3-7 6-11z"/></svg> Umidade
+                            <strong data-api="clima-umidade">--%</strong>
+</p>
+<p>
+                            <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7"/></svg> Vento
+                            <strong data-api="clima-vento">-- km/h</strong>
+</p>
+<p>
+                            <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H7a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 10.5 4.25 4.25 0 0 1 17.5 19z"/></svg> Chuva
+                            <strong data-api="clima-chuva">-- mm</strong>
+</p>
+</div>
+</div>
+<div class="condicao">
+                    <svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V12"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 16c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z"/></svg>
+                    <span data-api="clima-janela">
+<strong>Condições ideais para</strong><br/>
+                        colheita da uva.
+                    </span>
+</div>
+</div>
+</section>
+<!-- ================= EXPORTAÇÃO RESUMIDA ================= -->
+<section class="exportacao-resumo">
+<div class="secao-titulo">
+<div>
+<h2>Exportação e logística</h2>
+<p>
+                        Acompanhe seus lotes e próximos embarques.
+                    </p>
+</div>
+<a href="#exportacao">
+                    Ver detalhes →
+                </a>
+</div>
+<div class="export-grid">
+<div class="export-card">
+<div class="export-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="M12 4l6 7.5h-6"/><path d="M12 7L7 11.5h5"/><path d="M3.5 15h17l-2 4.5h-13z"/></svg></div>
+<div>
+<span>Próximo embarque</span>
+<strong>18/09/2026</strong>
+<small>Lote #024 • Europa</small>
+</div>
+</div>
+<div class="export-card">
+<div class="export-icon azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>
+<div>
+<span>Volume para exportação</span>
+<strong>2.500 kg</strong>
+<small>Uva • Demanda alta</small>
+</div>
+</div>
+<div class="export-card">
+<div class="export-icon amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v.01M18 14v.01"/></svg></div>
+<div>
+<span>Preço estimado</span>
+<strong>R$ 8,50/kg</strong>
+<small>Mercado internacional</small>
+</div>
+</div>
+<div class="export-status">
+<div class="status-top">
+<span>Status da exportação</span>
+<strong>80%</strong>
+</div>
+<div class="barra">
+<div></div>
+</div>
+<small>Em andamento • Lote #024</small>
+</div>
+</div>
+</section>
+</main>
+</section>
+<script src="../comum.js"></script>
+<script src="../preferencias.js"></script>
+<script src="produtor.js"></script>
+<script src="../configuracoes.js"></script>
+<script src="../thingspeak.js"></script>
+<script src="clima-api.js"></script>
+<script src="lavouras-api.js"></script>
+<script src="financeiro-api.js"></script>
+<script src="relatorios-api.js"></script>
+<script src="exportacao-api.js"></script>
+<script src="alertas-api.js"></script>
+</body>
+</html>

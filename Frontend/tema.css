@@ -1,0 +1,1050 @@
+/* =====================================================================
+   Safra — tema compartilhado (ADM, Analista e Produtor)
+   Fica em Frontend/tema.css e é carregado ANTES do CSS de cada perfil.
+
+   Para mudar o tamanho das fontes do sistema inteiro, altere apenas
+   os valores abaixo. Todas as telas usam estas variáveis.
+   ===================================================================== */
+
+:root {
+    /* Famílias tipográficas */
+    --fonte-titulo: "Fraunces", Georgia, serif;
+    --fonte-texto: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+
+    /* Escala de tamanhos (mínimo legível: 13px) */
+    --fs-xs: 13px;    /* legendas, rótulos pequenos, selos        */
+    --fs-sm: 15px;    /* textos secundários, tabelas, formulários */
+    --fs-md: 17px;    /* texto principal, menus, botões           */
+    --fs-lg: 20px;    /* subtítulos de cartões                    */
+    --fs-xl: 24px;    /* títulos de seção, valores de destaque    */
+    --fs-2xl: 30px;   /* indicadores grandes                      */
+    --fs-3xl: 38px;   /* títulos de página                        */
+    --fs-4xl: 48px;   /* destaques especiais                      */
+    --fs-menu: 16px;  /* itens do menu lateral                    */
+}
+
+/* Controles de formulário herdam a fonte do sistema */
+button,
+input,
+select,
+textarea {
+    font-family: var(--fonte-texto);
+}
+
+body {
+    font-family: var(--fonte-texto);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 {
+    font-family: var(--fonte-titulo);
+}
+
+
+/* =====================================================================
+   COMPONENTES COMPARTILHADOS
+   (carregado DEPOIS do CSS de cada perfil, para valer em todos igual)
+   ===================================================================== */
+
+/* ---------- Ícones (SVG de linha) ---------- */
+.ico {
+    flex: none;
+    stroke-width: 1.8;
+}
+
+.ico-inline {
+    display: inline-block;
+    width: 1.15em;
+    height: 1.15em;
+    margin-right: .4em;
+    vertical-align: -0.2em;
+}
+
+.ico-inline:only-child {
+    margin: 0;
+}
+
+/* Menu lateral: ícone sempre num quadrado de 24px, alinhado ao texto */
+.safra-page .sidebar .menu-item > :first-child {
+    display: grid !important;
+    place-items: center;
+    flex: none !important;
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0 !important;
+    line-height: 0;
+}
+
+.safra-page .sidebar .menu-item > :first-child .ico {
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.9;
+}
+
+/* Caixas coloridas com ícone: sempre quadradas/redondas, nunca ovais */
+.safra-page .conteudo :is(
+    .titulo-icone, .title-icon, .folha-icon, .icone-titulo,
+    .icone, .card-icon, .card-icone, .stat-icon, .indicador-icon, .indicador-icone,
+    .fonte-icon, .icone-card, .modelo-previsao-icon, .modelo-icone, .relatorio-icone,
+    .config-icone, .atualizacao-icone, .export-icon, .summary-icon, .info-icon,
+    .painel-icone, .perfil-icone,
+    .alerta-icon, .alerta-icone, .atividade-icone, .evento-icone, .transaction-icon,
+    .mini-icone, .mercado-icone, .seguranca-icon, .inconsistencia-icon,
+    .status-icon, .status-icone, .conta-icone, .icone-log, .icone-relatorio
+) {
+    --ico-bg: #e2f1e8;
+    --ico-fg: #1d7a4b;
+    --ico-size: 48px;
+    --ico-raio: 14px;
+
+    display: grid !important;
+    place-items: center;
+    flex: none !important;
+    align-self: center;
+
+    width: var(--ico-size) !important;
+    min-width: var(--ico-size) !important;
+    height: var(--ico-size) !important;
+    min-height: var(--ico-size) !important;
+    padding: 0 !important;
+
+    border-radius: var(--ico-raio) !important;
+    border: 0 !important;
+
+    background: var(--ico-bg) !important;
+    color: var(--ico-fg) !important;
+
+    font-family: var(--fonte-texto) !important;
+    font-size: var(--fs-xs) !important;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* tamanhos */
+.safra-page .conteudo :is(.titulo-icone, .title-icon, .folha-icon, .icone-titulo) {
+    --ico-size: 64px;
+    --ico-raio: 18px;
+}
+
+.safra-page .conteudo :is(
+    .alerta-icon, .alerta-icone, .atividade-icone, .evento-icone, .transaction-icon,
+    .mini-icone, .mercado-icone, .seguranca-icon, .inconsistencia-icon,
+    .status-icon, .status-icone, .conta-icone, .icone-log, .icone-relatorio
+) {
+    --ico-size: 40px;
+    --ico-raio: 12px;
+}
+
+/* o ícone ocupa pouco mais da metade da caixa */
+.safra-page .conteudo :is(
+    .titulo-icone, .title-icon, .folha-icon, .icone-titulo,
+    .icone, .card-icon, .card-icone, .stat-icon, .indicador-icon, .indicador-icone,
+    .fonte-icon, .icone-card, .modelo-previsao-icon, .modelo-icone, .relatorio-icone,
+    .config-icone, .atualizacao-icone, .export-icon, .summary-icon, .info-icon,
+    .painel-icone, .perfil-icone,
+    .alerta-icon, .alerta-icone, .atividade-icone, .evento-icone, .transaction-icon,
+    .mini-icone, .mercado-icone, .seguranca-icon, .inconsistencia-icon,
+    .status-icon, .status-icone, .conta-icone, .icone-log, .icone-relatorio
+) > .ico {
+    width: calc(var(--ico-size) * .5);
+    height: calc(var(--ico-size) * .5);
+    stroke-width: 1.9;
+}
+
+/* cores por modificador */
+.safra-page .conteudo :is(.azul, .blue, .blue-icon, .dados, .exportador, .preferencias) {
+    --ico-bg: #dcebf7;
+    --ico-fg: #276a9c;
+}
+.safra-page .conteudo :is(.amarelo, .yellow, .yellow-icon, .permissao, .administrador, .notificacoes) {
+    --ico-bg: #fbefcb;
+    --ico-fg: #a46a00;
+}
+.safra-page .conteudo :is(.roxo, .purple, .modelo, .analista, .seguranca) {
+    --ico-bg: #ece1f5;
+    --ico-fg: #774596;
+}
+.safra-page .conteudo :is(.vermelho, .red) {
+    --ico-bg: #fbdede;
+    --ico-fg: #b23a3a;
+}
+
+/* siglas em texto dentro das caixas (UE, EUA, CA, PDF...) */
+.ico-sigla {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+/* Frutas das lavouras (no lugar dos emojis) */
+.safra-page .lavoura-image {
+    display: grid;
+    place-items: center;
+    font-size: 0;
+}
+.safra-page .lavoura-image .ico-fruta {
+    width: 72px;
+    height: 72px;
+    stroke-width: 1.4;
+}
+.safra-page .lavoura-image.uva   { color: #6a3d86; }
+.safra-page .lavoura-image.manga { color: #c2700a; }
+
+/* Pequenos ajustes de ícones soltos */
+.safra-page .favorite {
+    display: grid;
+    place-items: center;
+}
+.safra-page .favorite .ico { width: 18px; height: 18px; }
+
+.safra-page .temperatura-top > .ico {
+    width: 30px;
+    height: 30px;
+    margin: 0 10px 0 0;
+    color: #d98e04;
+}
+
+
+/* ---------- Botão liga/desliga (igual em todos os perfis) ---------- */
+/* O .switch é um <label> (elemento em linha): sem display próprio, o
+   navegador ignorava a altura e a bolinha ficava fora do centro. */
+.safra-page .switch {
+    position: relative;
+    display: inline-block !important;
+    flex: none;
+    width: 48px !important;
+    height: 28px !important;
+    vertical-align: middle;
+}
+
+.safra-page .switch input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 1;
+    display: block !important;
+}
+
+.safra-page .switch .slider {
+    position: absolute;
+    inset: 0;
+    /* o .slider é um <span>: regras tipo ".opcao span" davam margem
+       nele e empurravam a bolinha pra baixo */
+    margin: 0 !important;
+    display: block;
+    border-radius: 999px;
+    background: #d3dad6;
+    transition: background .2s ease;
+}
+
+.safra-page .switch .slider::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+    transition: transform .2s ease;
+}
+
+.safra-page .switch input:checked + .slider {
+    background: #2f8f5b;
+}
+
+.safra-page .switch input:checked + .slider::before {
+    transform: translateX(20px);
+}
+
+.safra-page .switch input:focus-visible + .slider {
+    outline: 3px solid rgba(47, 143, 91, .35);
+    outline-offset: 2px;
+}
+
+
+/* ---------- Barra superior (igual em todos os perfis) ---------- */
+/* Conta (sino + usuário) à esquerda, busca à direita */
+body .safra-page .topbar.tb {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap;
+    gap: 24px;
+    min-height: 86px;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.tb-conta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.tb-sino {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: 1px solid #e1e4dd;
+    border-radius: 50%;
+    background: #fff;
+    color: #173f35;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(23, 63, 53, .06);
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.tb-sino .ico { width: 24px; height: 24px; }
+
+.tb-sino:hover {
+    background: #f1f6f2;
+    border-color: #bcd6c6;
+}
+
+.tb-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    display: grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border: 2px solid #f5f4ee;
+    border-radius: 999px;
+    background: #e5484d;
+    color: #fff;
+    font-family: var(--fonte-texto);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.tb-usuario {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 16px 6px 6px;
+    border: 1px solid #e1e4dd;
+    border-radius: 999px;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(23, 63, 53, .06);
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.tb-usuario:hover {
+    border-color: #bcd6c6;
+    box-shadow: 0 3px 10px rgba(23, 63, 53, .08);
+}
+
+.tb-usuario:focus-visible,
+.tb-sino:focus-visible {
+    outline: 3px solid rgba(47, 143, 91, .4);
+    outline-offset: 2px;
+}
+
+.tb-avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #34a06a, #0b5d44);
+    color: #fff;
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    letter-spacing: .03em;
+}
+
+.tb-dados {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+}
+
+.tb-dados strong {
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    line-height: 1.1;
+    color: #173f35;
+    white-space: nowrap;
+}
+
+.tb-dados small {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #e3f1e8;
+    color: #1d6b45;
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.tb-seta {
+    width: 18px;
+    height: 18px;
+    margin-left: 2px;
+    color: #5f6d68;
+}
+
+.tb-busca {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 1 460px;
+    min-width: 0;
+    height: 52px;
+    padding: 0 20px;
+    border: 1px solid #e1e4dd;
+    border-radius: 999px;
+    background: #fff;
+    color: #5f6d68;
+    box-shadow: 0 1px 2px rgba(23, 63, 53, .06);
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.tb-busca:focus-within {
+    border-color: #2f8f5b;
+    box-shadow: 0 0 0 3px rgba(47, 143, 91, .18);
+}
+
+.tb-busca .ico { width: 20px; height: 20px; }
+
+.tb-busca input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #173f35;
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-sm);
+}
+
+.tb-busca input::placeholder { color: #7b8782; }
+
+@media (max-width: 900px) {
+    body .safra-page .topbar.tb { flex-wrap: wrap; gap: 14px; }
+    .tb-busca { order: 2; flex: 1 1 100%; }
+}
+
+@media (max-width: 520px) {
+    .tb-dados small { display: none; }
+}
+
+
+/* ícone solto (sem caixa) criado pelo JavaScript */
+.ico-card { width: 24px; height: 24px; }
+
+.sidebar .logo-area .logo-img {
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    background: transparent;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+/* =====================================================================
+   CONFIGURAÇÕES FUNCIONAIS — avisos, janelas e estados
+   Usado por Frontend/configuracoes.js em todos os perfis
+   ===================================================================== */
+
+/* Aviso rápido (aparece no canto da tela e some sozinho) */
+.safra-avisos {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 10000;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    max-width: min(380px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.safra-aviso {
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: #1d7a4b;
+    color: #fff;
+
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    line-height: 1.35;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+    pointer-events: auto;
+    animation: safra-aviso-entra .25s ease;
+}
+
+.safra-aviso.erro { background: #c0392b; }
+.safra-aviso.info { background: #3478a8; }
+
+.safra-aviso.saindo {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .3s ease, transform .3s ease;
+}
+
+@keyframes safra-aviso-entra {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* Janela (alterar senha, confirmar saída) */
+.safra-modal-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: grid;
+    place-items: center;
+    padding: 20px;
+
+    background: rgba(12, 38, 28, .5);
+    animation: safra-fundo-entra .2s ease;
+}
+
+@keyframes safra-fundo-entra {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.safra-modal {
+    width: 100%;
+    max-width: 440px;
+    padding: 28px;
+
+    border-radius: 18px;
+    background: #fff;
+    color: #173f35;
+
+    font-family: var(--fonte-texto);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .28);
+}
+
+.safra-modal h3 {
+    margin-bottom: 6px;
+    font-family: var(--fonte-titulo);
+    font-size: var(--fs-xl);
+}
+
+.safra-modal > p {
+    margin-bottom: 18px;
+    color: #5f6d68;
+    font-size: var(--fs-sm);
+}
+
+.safra-modal label {
+    display: block;
+    margin-bottom: 14px;
+    color: #31584d;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+}
+
+.safra-modal input {
+    display: block;
+    width: 100%;
+    height: 46px;
+    margin-top: 6px;
+    padding: 0 14px;
+
+    border: 1px solid #d7dcd5;
+    border-radius: 10px;
+    background: #fff;
+    color: #173f35;
+
+    font: inherit;
+    font-weight: 400;
+}
+
+.safra-modal input:focus {
+    outline: none;
+    border-color: #2f8f5b;
+    box-shadow: 0 0 0 3px rgba(47, 143, 91, .18);
+}
+
+p.safra-modal-erro {
+    min-height: 20px;
+    margin: -4px 0 12px;
+    color: #c0392b;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+}
+
+.safra-modal-botoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.safra-btn {
+    height: 44px;
+    padding: 0 20px;
+
+    border: 1px solid #d7dcd5;
+    border-radius: 10px;
+    background: #fff;
+    color: #31584d;
+
+    font: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.safra-btn:hover { background: #f1f6f2; }
+
+.safra-btn.primario {
+    border-color: #2f8f5b;
+    background: #2f8f5b;
+    color: #fff;
+}
+
+.safra-btn.primario:hover { background: #267a4d; }
+
+.safra-btn.perigo {
+    border-color: #c0392b;
+    background: #c0392b;
+    color: #fff;
+}
+
+.safra-btn.perigo:hover { background: #a63024; }
+
+.safra-btn:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+/* Tela de Configurações: campo com erro, botão sem alterações, foto */
+[data-config-page] .campo input.invalido,
+[data-config-page] .campo select.invalido {
+    border-color: #d64545;
+    box-shadow: 0 0 0 3px rgba(214, 69, 69, .14);
+}
+
+[data-config-page] .campo-erro {
+    display: block;
+    margin-top: 6px;
+    color: #c0392b;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+}
+
+[data-config-page] .btn-principal:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+[data-config-page] .perfil-avatar {
+    background-size: cover;
+    background-position: center;
+}
+
+[data-config-page] .btn-foto-remover {
+    margin-left: 8px;
+    color: #b23a3a;
+}
+
+[data-config-page] .btn-foto-remover[hidden] {
+    display: none;
+}
+
+[data-config-page] .config-vazio {
+    padding: 28px;
+    border: 1px dashed #cfd6cf;
+    border-radius: 14px;
+    background: #fff;
+    color: #5f6d68;
+    font-size: var(--fs-sm);
+    text-align: center;
+}
+
+
+/* =====================================================================
+   SEGURANÇA — listas de sessões ativas e histórico de acessos
+   (janelas abertas pelo Frontend/configuracoes.js)
+   ===================================================================== */
+
+.safra-modal.larga {
+    max-width: 620px;
+}
+
+.safra-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    max-height: 52vh;
+    margin-bottom: 14px;
+    padding-right: 2px;
+
+    overflow-y: auto;
+}
+
+.safra-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #e3e8e2;
+    border-radius: 12px;
+    background: #fafcf9;
+}
+
+.safra-item-icone {
+    flex: none;
+    display: grid;
+    place-items: center;
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+    background: #e3f1e8;
+    color: #1d7a4b;
+}
+
+.safra-item-icone svg {
+    width: 20px;
+    height: 20px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.safra-item-corpo {
+    flex: 1;
+    min-width: 0;
+}
+
+.safra-item-corpo strong {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    color: #173f35;
+    font-size: var(--fs-sm);
+    font-weight: 700;
+}
+
+.safra-item-corpo small {
+    display: block;
+    margin-top: 3px;
+
+    color: #5f6d68;
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.safra-item > .safra-btn {
+    flex: none;
+    height: 36px;
+    padding: 0 14px;
+}
+
+.safra-selo {
+    padding: 2px 9px;
+
+    border-radius: 999px;
+    background: #e3f1e8;
+    color: #1d6b45;
+
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.safra-selo.ok { background: #e3f1e8; color: #1d6b45; }
+.safra-selo.erro { background: #fbdede; color: #b23a3a; }
+.safra-selo.atual { background: #dcebf7; color: #276a9c; }
+
+.safra-lista-vazia {
+    padding: 22px;
+
+    border: 1px dashed #cfd6cf;
+    border-radius: 12px;
+    color: #5f6d68;
+
+    font-size: var(--fs-sm);
+    text-align: center;
+}
+
+.safra-lista > .safra-btn {
+    align-self: flex-end;
+}
+
+/* =====================================================================
+   EFEITOS DE ENTRADA
+   1) Fade curto no conteúdo ao trocar de tela pelo menu
+   2) Blocos que aparecem suavemente ao entrar na área visível
+      (a classe .reveal é colocada pelo Safra.revelar, no comum.js)
+   ===================================================================== */
+
+@keyframes safra-pagina-entra {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.safra-page.pagina-ativa .conteudo {
+    animation: safra-pagina-entra .35s ease;
+}
+
+@keyframes safra-revela {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* Usa animação (e não transition) para valer mesmo que o elemento já
+   tenha opacity/transform definidos por outros scripts da tela. */
+.reveal {
+    animation: safra-revela .6s ease both;
+    animation-delay: var(--delay, 0ms);
+    animation-play-state: paused;
+}
+
+.reveal.visivel {
+    animation-play-state: running;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .safra-page.pagina-ativa .conteudo { animation: none; }
+    .reveal { animation: none; }
+}
+
+/* =====================================================================
+   BARRA DO TOPO: pesquisa à esquerda, sino + perfil à direita
+   (no celular a pesquisa continua na linha de baixo)
+   ===================================================================== */
+
+@media (min-width: 901px) {
+    .tb-busca { order: 1; }
+    .tb-conta { order: 2; }
+}
+
+/* =====================================================================
+   MENU DO PERFIL (abre ao clicar no usuário da barra do topo)
+   ===================================================================== */
+
+.tb-conta { position: relative; }
+
+.tb-seta { transition: transform .2s ease; }
+
+.tb-usuario[aria-expanded="true"] {
+    border-color: #bcd6c6;
+    box-shadow: 0 3px 10px rgba(23, 63, 53, .08);
+}
+
+.tb-usuario[aria-expanded="true"] .tb-seta { transform: rotate(180deg); }
+
+@keyframes safra-menu-entra {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.tb-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 60;
+    width: 310px;
+    max-width: calc(100vw - 32px);
+    padding: 8px;
+    border: 1px solid #e1e4dd;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 14px 34px rgba(23, 63, 53, .16);
+    animation: safra-menu-entra .18s ease;
+}
+
+.tb-menu[hidden] { display: none; }
+
+.tb-menu-topo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    padding: 10px 10px 14px;
+    border-bottom: 1px solid #eceee8;
+}
+
+.tb-menu-dados {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    min-width: 0;
+}
+
+.tb-menu-dados strong {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #173f35;
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.tb-menu-email {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #5f6d68;
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-xs);
+}
+
+.tb-menu-dados small {
+    margin-top: 3px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #e3f1e8;
+    color: #1d6b45;
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.tb-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #173f35;
+    font-family: var(--fonte-texto);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+
+.tb-menu-item:hover,
+.tb-menu-item:focus-visible {
+    background: #f1f6f2;
+    outline: none;
+}
+
+.tb-menu-item .ico { flex: none; width: 20px; height: 20px; color: #2f8f5b; }
+
+.tb-menu-item span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.tb-menu-item strong { font-size: var(--fs-sm); font-weight: 600; line-height: 1.25; }
+
+.tb-menu-item small { color: #5f6d68; font-size: var(--fs-xs); font-weight: 400; }
+
+.tb-menu-sep { height: 1px; margin: 6px 4px; background: #eceee8; }
+
+.tb-menu-item.tb-menu-sair,
+.tb-menu-item.tb-menu-sair .ico { color: #b4363b; }
+
+.tb-menu-item.tb-menu-sair:hover,
+.tb-menu-item.tb-menu-sair:focus-visible { background: #fdeeee; }
+
+@media (prefers-reduced-motion: reduce) {
+    .tb-menu { animation: none; }
+    .tb-seta { transition: none; }
+}
+
+
+/* =====================================================================
+   TELA DE CONFIGURAÇÕES (compartilhada por Produtor, Analista e ADM)
+   Tudo escopado em [data-config-page] para não afetar outras telas.
+   ===================================================================== */
+[data-config-page] .cabecalho{padding:39px 0 25px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+[data-config-page] .titulo-area{display:flex;align-items:center;gap:18px}
+[data-config-page] .titulo-icone{width:56px;height:56px;display:flex;align-items:center;justify-content:center;border-radius:13px;background:#e4f0dd;color:#176047}
+[data-config-page] .cabecalho h1{font-family:var(--fonte-titulo);color:#164b3c;font-size:var(--fs-3xl);line-height:1}
+[data-config-page] .cabecalho p{margin-top:7px;color:#74847e;font-size:var(--fs-sm)}
+[data-config-page] .btn-principal{height:50px;padding:0 23px;border:none;border-radius:9px;background:#218149;color:#fff;font-family:var(--fonte-texto);font-size:var(--fs-sm);font-weight:700;cursor:pointer;box-shadow:0 7px 15px rgba(33,129,73,.15)}
+[data-config-page] .btn-principal:hover{background:#196e3e}
+[data-config-page] .config-card{margin-bottom:18px;padding:22px;border:1px solid #e0e1db;border-radius:13px;background:#fff;box-shadow:0 4px 12px rgba(25,65,50,.025)}
+[data-config-page] .config-titulo{display:flex;align-items:center;gap:13px;padding-bottom:18px;border-bottom:1px solid #eeeeea}
+[data-config-page] .config-icone{width:43px;height:43px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:var(--fs-md)}
+[data-config-page] .config-icone.verde{background:#dcefd6}
+[data-config-page] .config-icone.amarelo{background:#fae9b6}
+[data-config-page] .config-icone.azul{background:#dcecf4}
+[data-config-page] .config-icone.roxo{background:#eadff1}
+[data-config-page] .config-titulo h2{color:#174d3e;font-family:var(--fonte-titulo);font-size:var(--fs-lg)}
+[data-config-page] .config-titulo p{margin-top:4px;color:#7c8984;font-size:var(--fs-xs)}
+[data-config-page] .perfil-area{margin:19px 0;display:flex;align-items:center;gap:13px}
+[data-config-page] .perfil-avatar{width:62px;height:62px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#edf4ef;color:#176047;font-size:var(--fs-md);font-weight:700;overflow:hidden}
+[data-config-page] .perfil-dados strong{display:block;color:#204e42;font-family:var(--fonte-titulo);font-size:var(--fs-lg)}
+[data-config-page] .perfil-dados span{display:block;margin-top:3px;color:#7c8984;font-size:var(--fs-xs)}
+[data-config-page] .btn-foto{margin-top:8px;padding:5px 9px;border:1px solid #dce5de;border-radius:6px;background:#f4f7f3;color:#28754c;font-size:var(--fs-xs);font-weight:700;cursor:pointer}
+[data-config-page] .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+[data-config-page] .campo{display:flex;flex-direction:column;gap:6px}
+[data-config-page] .campo label{color:#77847f;font-size:var(--fs-xs);font-weight:600}
+[data-config-page] .campo input,[data-config-page] .campo select{width:100%;height:38px;padding:0 11px;border:1px solid #dfe2dc;border-radius:8px;outline:none;background:#fff;color:#3f5d53;font-family:var(--fonte-texto);font-size:var(--fs-xs)}
+[data-config-page] .campo input:focus,[data-config-page] .campo select:focus{border-color:#62a47a}
+[data-config-page] .campo input:disabled{background:#f3f4f0;color:#8b9691}
+[data-config-page] .opcoes{padding-top:5px}
+[data-config-page] .opcao{min-height:67px;padding:13px 0;display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid #eeeeea}
+[data-config-page] .opcao:last-child{border-bottom:none}
+[data-config-page] .opcao strong{display:block;color:#31584d;font-size:var(--fs-sm)}
+[data-config-page] .opcao span:not(.slider){display:block;margin-top:4px;color:#84908b;font-size:var(--fs-xs)}
+[data-config-page] .preferencias-grid{padding-top:19px;display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+[data-config-page] .seguranca{min-height:70px;padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid #eeeeea}
+[data-config-page] .seguranca:last-child{border-bottom:none}
+[data-config-page] .seguranca-info{display:flex;align-items:center;gap:12px}
+[data-config-page] .seguranca-icon{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#f1f4f0;font-size:var(--fs-md)}
+[data-config-page] .seguranca-info strong{display:block;color:#31584d;font-size:var(--fs-xs)}
+[data-config-page] .seguranca-info span{display:block;margin-top:4px;color:#87918d;font-size:var(--fs-xs)}
+[data-config-page] .btn-secundario{height:34px;padding:0 17px;border:1px solid #d9e4dc;border-radius:8px;background:#edf5ee;color:#28744d;font-family:var(--fonte-texto);font-size:var(--fs-xs);font-weight:700;cursor:pointer}
+[data-config-page] .config-card.conta{display:flex;align-items:center;justify-content:space-between;gap:20px}
+[data-config-page] .conta h2{color:#174d3e;font-family:var(--fonte-titulo);font-size:var(--fs-lg)}
+[data-config-page] .conta p{margin-top:4px;color:#84908b;font-size:var(--fs-xs)}
+[data-config-page] .btn-sair{height:36px;padding:0 15px;border:1px solid #efcccc;border-radius:7px;background:#fff6f6;color:#c44f4f;font-size:var(--fs-xs);font-weight:700;cursor:pointer}
+[data-config-page] .rodape{padding:8px 3px;display:flex;justify-content:space-between;color:#89938f;font-size:var(--fs-xs)}
+@media (max-width:650px){
+  [data-config-page] .form-grid,[data-config-page] .preferencias-grid{grid-template-columns:1fr}
+  [data-config-page] .config-card.conta{flex-direction:column;align-items:flex-start}
+  [data-config-page] .btn-sair{width:100%}
+  [data-config-page] .rodape{flex-direction:column;gap:6px}
+  [data-config-page] .cabecalho{flex-wrap:wrap}
+}
