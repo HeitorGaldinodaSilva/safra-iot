@@ -2,8 +2,8 @@
 
 Plataforma Full Stack que coleta temperatura e umidade reais com um **ESP32 + DHT11**, envia os dados por Wi-Fi para uma **API REST**, guarda tudo em um **banco MySQL** e mostra em um **dashboard web instalável (PWA)** com gráficos, histórico, filtros e **alertas configuráveis**.
 
-> Ambiente monitorado: *(preencher: ex.: lavoura de uva/manga em Petrolina-PE)*.
-> Equipe: *(preencher nomes)* · Disciplina/Professor: *(preencher)*
+> Ambiente monitorado: lavoura de uva/Petrolina-PE.
+> Equipe: Heitor Galdino da Silva, Lucas Felipe Vaz de Lima Leite, Mayara Vithoria Cavalcanti e Maria Julia Lacet Cordeiro · Disciplina/Professor: Unidade de Extensão Mobile / Ícaro Santos Ferreira
 
 ```
 ESP32 + DHT11 ──Wi-Fi──► API FastAPI ──► MySQL
