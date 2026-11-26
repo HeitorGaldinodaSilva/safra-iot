@@ -1,0 +1,24 @@
+# missao TESTE1 | otp | fase depois | 2026-11-23T12:57:24.538Z | http://localhost:3001
+# Teste OTP | missao TESTE1 | fase depois | http://localhost:3001
+
+== Login só com a senha (2FA já está cadastrado para este usuário) ==
+OK   | senha certa e sem código: não pode receber token               | HTTP 401 | esperado: sem token (401)
+OK   | desafio usado como token em rota protegida                     | HTTP 401 | esperado: 401
+
+== Segundo fator ==
+OK   | código errado (000000)                                         | HTTP 401 | esperado: 401
+OK   | código vencido (de 150 s atrás)                                | HTTP 401 | esperado: 401
+OK   | código com letras/formato inválido                             | HTTP 401 | esperado: 401
+OK   | código válido                                                  | HTTP 200 | esperado: 200 + token
+OK   | token do 2FA acessa rota protegida                             | HTTP 200 | esperado: 200
+OK   | mesmo código usado de novo (replay)                            | HTTP 401 | esperado: 401
+
+== Código de recuperação (uso único) ==
+OK   | código de recuperação (1º uso)                                 | HTTP 200 | esperado: 200 + token
+OK   | mesmo código de recuperação (2º uso)                           | HTTP 401 | esperado: 401
+
+== Tentativa de contorno: força bruta no código de 6 dígitos ==
+OK   | após várias tentativas erradas o desafio é travado             | HTTP 401 | esperado: 429 (ou 401 se o desafio já foi apagado)
+OK   | novo login logo depois continua travado para este usuário      | HTTP 429 | esperado: 429 (bloqueio de 5 min; reinicie o servidor para repetir)
+
+RESULTADO (depois): todas as verificações bateram com o esperado.

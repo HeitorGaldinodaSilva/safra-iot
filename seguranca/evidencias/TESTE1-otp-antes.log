@@ -1,0 +1,8 @@
+# missao TESTE1 | otp | fase antes | 2026-11-23T01:25:25.313Z | http://localhost:3001
+# Teste OTP | missao TESTE1 | fase antes | http://localhost:3001
+Preparação: 2FA cadastrado para c.teste@safra.test e 10 códigos de recuperação emitidos.
+
+== Login só com a senha (2FA já está cadastrado para este usuário) ==
+OK   | senha certa e sem código                                       | HTTP 200 | esperado: token emitido sem o 2º fator (vulnerável)
+
+RESULTADO (antes): todas as verificações bateram com o esperado.

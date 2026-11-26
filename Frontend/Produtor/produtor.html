@@ -66,7 +66,7 @@
 
   <template id="tpl-topbar">
     <div class="tb-conta">
-    <button type="button" class="tb-sino" aria-label="Notificações: 3 novas"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg><span class="tb-badge">3</span></button>
+    <button type="button" class="tb-sino" aria-label="Notificações"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg><span class="tb-badge" style="display:none">0</span></button>
     <div class="tb-usuario" tabindex="0" role="button" aria-label="Conta de João Silva">
     <span class="tb-avatar">JP</span>
     <span class="tb-dados"><strong>João Silva</strong><small>Produtor</small></span>
@@ -195,7 +195,7 @@
 <span class="slider"></span>
 </label>
 </div>
-<div class="opcao">
+<div class="opcao" style="display:none">
 <div>
 <strong>Relatórios</strong>
 <span>
@@ -206,50 +206,6 @@
 <input data-pref="notif_relatorios" type="checkbox"/>
 <span class="slider"></span>
 </label>
-</div>
-</div>
-</section>
-<!-- =========================
-             PREFERÊNCIAS
-        ========================== -->
-<section class="config-card">
-<div class="config-titulo">
-<div class="config-icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></div>
-<div>
-<h2>Preferências</h2>
-<p>
-                        Personalize a forma como você utiliza o sistema Safra.
-                    </p>
-</div>
-</div>
-<div class="preferencias-grid">
-<div class="campo">
-<label>Idioma</label>
-<select data-pref="idioma">
-<option value="pt-BR">Português (Brasil)</option>
-<option value="en">English</option>
-</select>
-</div>
-<div class="campo">
-<label>Unidade de peso</label>
-<select data-pref="unidade_peso">
-<option value="kg">Quilograma (kg)</option>
-<option value="ton">Tonelada (ton)</option>
-</select>
-</div>
-<div class="campo">
-<label>Unidade de área</label>
-<select data-pref="unidade_area">
-<option value="ha">Hectare (ha)</option>
-<option value="m2">Metro quadrado (m²)</option>
-</select>
-</div>
-<div class="campo">
-<label>Formato de data</label>
-<select data-pref="formato_data">
-<option value="DD/MM/AAAA">DD/MM/AAAA</option>
-<option value="MM/DD/AAAA">MM/DD/AAAA</option>
-</select>
 </div>
 </div>
 </section>
@@ -2186,6 +2142,7 @@
 </main>
 </section>
 <script src="../comum.js"></script>
+<script src="../sino.js"></script>
 <script src="../preferencias.js"></script>
 <script src="produtor.js"></script>
 <script src="../configuracoes.js"></script>

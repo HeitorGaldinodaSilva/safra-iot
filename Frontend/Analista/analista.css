@@ -4598,3 +4598,591 @@ tbody tr:hover {
     align-items: flex-start;
     text-align: left;
 }
+
+
+/* =====================================================================
+   FUNCIONALIDADES DO ANALISTA (atualizar dados, criar modelo, dados)
+===================================================================== */
+
+/* ---------- Botão atualizar: giro, carregando e concluído ---------- */
+@keyframes safra-giro { to { transform: rotate(360deg); } }
+
+.btn-principal.carregando { opacity: 0.9; cursor: progress; }
+.btn-principal.carregando svg { animation: safra-giro 0.8s linear infinite; }
+.btn-principal.concluido { background: #176b3b; }
+.btn-principal:disabled { cursor: progress; transform: none; }
+
+/* ---------- Barra de progresso no topo da página ---------- */
+.safra-progresso {
+    height: 4px;
+    border-radius: 4px;
+    background: #e3ece1;
+    overflow: hidden;
+    margin: -8px 0 16px;
+    transition: opacity 0.4s ease;
+}
+.safra-progresso span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #218149, #7bc47f);
+}
+
+/* ---------- Pulso nos cartões e faixas atualizados ---------- */
+@keyframes safra-pulso {
+    0%   { box-shadow: 0 0 0 0 rgba(33, 129, 73, 0.45); }
+    100% { box-shadow: 0 0 0 14px rgba(33, 129, 73, 0); }
+}
+.pulso { animation: safra-pulso 0.9s ease-out; }
+
+/* ---------- Tabela de dados ---------- */
+@keyframes safra-linha-nova {
+    from { opacity: 0; transform: translateY(-8px); background: #e1f1dc; }
+    to   { opacity: 1; transform: translateY(0); background: transparent; }
+}
+.linha-nova { animation: safra-linha-nova 0.7s ease both; }
+.linha-extra { display: table-row; }
+
+.tag.erro { background: #f8dcd8; color: #b23b2e; }
+
+.linha-vazia td {
+    text-align: center;
+    padding: 28px 10px;
+    color: #6b7a70;
+    font-size: var(--fs-sm);
+}
+
+.acoes-tabela { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* ---------- Modelos ---------- */
+@keyframes safra-card-entra {
+    0%   { opacity: 0; transform: translateY(18px) scale(0.96); box-shadow: 0 0 0 0 rgba(33, 129, 73, 0.5); }
+    60%  { opacity: 1; transform: translateY(0) scale(1); box-shadow: 0 0 0 14px rgba(33, 129, 73, 0); }
+    100% { opacity: 1; transform: translateY(0) scale(1); box-shadow: 0 0 0 0 rgba(33, 129, 73, 0); }
+}
+.modelo-card.entrando { animation: safra-card-entra 0.9s ease both; }
+.modelo-card.saindo { opacity: 0; transform: scale(0.94); transition: all 0.3s ease; }
+
+.selo-novo {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: #e1f1dc;
+    color: #37804d;
+    font-family: var(--fonte-texto);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.modelos-vazio {
+    grid-column: 1 / -1;
+    padding: 40px 16px;
+    text-align: center;
+    color: #6b7a70;
+    font-size: var(--fs-sm);
+    border: 1px dashed #cfd8cc;
+    border-radius: 12px;
+}
+
+.modelo-footer a { cursor: pointer; }
+
+/* ---------- Modal ---------- */
+body.modal-aberto { overflow: hidden; }
+
+.safra-modal-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(20, 32, 24, 0.5);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.safra-modal-fundo.visivel { opacity: 1; }
+
+.safra-modal {
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 26px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    font-family: var(--fonte-texto);
+    transform: translateY(14px) scale(0.98);
+    transition: transform 0.25s ease;
+}
+.safra-modal-fundo.visivel .safra-modal { transform: translateY(0) scale(1); }
+
+@keyframes safra-tremer {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-7px); }
+    75% { transform: translateX(7px); }
+}
+.safra-modal.tremer { animation: safra-tremer 0.3s ease; }
+
+.modal-topo {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+.modal-topo h2 {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-size: var(--fs-xl);
+    color: #1f3a2c;
+}
+.modal-sub { margin: 4px 0 20px; color: #6b7a70; font-size: var(--fs-sm); }
+
+.modal-x {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: #f3f6f0;
+    color: #356255;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+.modal-x:hover { background: #e3ece1; }
+
+.safra-modal .campo { display: block; margin-bottom: 16px; }
+.safra-modal .campo > span {
+    display: block;
+    margin-bottom: 6px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: #356255;
+}
+.safra-modal .campo em { font-weight: 500; font-style: normal; color: #8a978d; }
+
+.safra-modal input[type="text"],
+.safra-modal select,
+.safra-modal textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid #dce1da;
+    border-radius: 9px;
+    background: #fff;
+    color: #1f3a2c;
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-sm);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.safra-modal textarea { resize: vertical; }
+.safra-modal input[type="text"]:focus,
+.safra-modal select:focus,
+.safra-modal textarea:focus {
+    border-color: #218149;
+    box-shadow: 0 0 0 3px rgba(33, 129, 73, 0.15);
+}
+.safra-modal input.invalido { border-color: #c9483a; box-shadow: 0 0 0 3px rgba(201, 72, 58, 0.12); }
+
+.erro-campo { display: block; min-height: 0; margin-top: 5px; color: #b23b2e; font-size: var(--fs-xs); font-weight: 600; }
+
+.modal-linha { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.chips-fonte { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-fonte { cursor: pointer; }
+.chip-fonte input { position: absolute; opacity: 0; pointer-events: none; }
+.chip-fonte span {
+    display: inline-block;
+    padding: 8px 14px;
+    border: 1px solid #dce1da;
+    border-radius: 20px;
+    background: #fff;
+    color: #4a5d52;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.chip-fonte input:checked + span { background: #e1f1dc; border-color: #218149; color: #1d6b3c; }
+.chip-fonte input:focus-visible + span { box-shadow: 0 0 0 3px rgba(33, 129, 73, 0.25); }
+
+.modal-rodape {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+}
+.modal-rodape .btn-secundario { height: 43px; }
+
+.btn-perigo {
+    margin-right: auto;
+    height: 43px;
+    padding: 0 14px;
+    border: 1px solid #efc9c4;
+    border-radius: 9px;
+    background: #fff;
+    color: #b23b2e;
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-perigo:hover { background: #fdf0ee; }
+
+/* ---------- Treinamento do modelo ---------- */
+.treino { text-align: center; padding: 18px 8px 8px; }
+.treino h2 { margin: 18px 0 6px; font-family: var(--fonte-titulo); font-size: var(--fs-xl); color: #1f3a2c; }
+.treino p { margin: 0 0 18px; color: #6b7a70; font-size: var(--fs-sm); }
+.treino-spinner {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto;
+    border: 5px solid #e1f1dc;
+    border-top-color: #218149;
+    border-radius: 50%;
+    animation: safra-giro 0.9s linear infinite;
+}
+.treino-trilho { height: 10px; border-radius: 10px; background: #e3ece1; overflow: hidden; }
+.treino-trilho span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #218149, #7bc47f);
+    transition: width 0.6s ease;
+}
+.treino-pct { display: block; margin-top: 8px; color: #6b7a70; font-weight: 700; font-size: var(--fs-xs); }
+
+@keyframes safra-check { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.treino-check {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: #218149;
+    color: #fff;
+    font-size: 34px;
+    line-height: 64px;
+    animation: safra-check 0.45s ease both;
+}
+
+/* ---------- Detalhes do modelo ---------- */
+.detalhe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.detalhe-grid div,
+.detalhe-bloco {
+    padding: 12px 14px;
+    border: 1px solid #e3ece1;
+    border-radius: 10px;
+    background: #f8faf6;
+}
+.detalhe-bloco { margin-bottom: 12px; }
+.detalhe-grid span,
+.detalhe-bloco > span { display: block; margin-bottom: 4px; color: #6b7a70; font-size: var(--fs-xs); font-weight: 600; }
+.detalhe-grid strong,
+.detalhe-bloco > strong { color: #1f3a2c; font-size: var(--fs-sm); }
+.detalhe-bloco .barra { margin-top: 8px; }
+
+@media (max-width: 560px) {
+    .modal-linha, .detalhe-grid { grid-template-columns: 1fr; }
+    .modal-rodape { flex-wrap: wrap; }
+}
+
+
+/* ---------- Dados reais: fonte no modal, erro, confirmação de exclusão ---------- */
+.fonte-real select { margin-bottom: 8px; }
+.fonte-real-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #e3ece1;
+    border-radius: 9px;
+    background: #f8faf6;
+    color: #4a5d52;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+}
+.fonte-real-info i { flex-shrink: 0; width: 9px; height: 9px; border-radius: 50%; background: #c8d2c6; }
+.fonte-real-info .ponto-ok { background: #218149; }
+.fonte-real-info .ponto-erro { background: #c9483a; }
+@keyframes safra-piscar { 50% { opacity: 0.3; } }
+.fonte-real-info .ponto-carregando { background: #d98e04; animation: safra-piscar 1s ease infinite; }
+
+.treino-check.erro { background: #c9483a; }
+.treino-erro p { max-width: 420px; margin-left: auto; margin-right: auto; }
+
+.confirma-texto { margin-right: auto; color: #b23b2e; font-size: var(--fs-sm); font-weight: 600; }
+.btn-perigo-cheio {
+    height: 43px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 9px;
+    background: #c9483a;
+    color: #fff;
+    font-family: var(--fonte-texto);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-perigo-cheio:hover { background: #a93a2e; }
+/* =====================================================
+   GRID DOS MODELOS
+===================================================== */
+
+.meus-modelos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.meu-modelo {
+    padding: 19px;
+    min-height: 285px;
+    transition: .2s;
+}
+.meu-modelo:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(25, 65, 50, .07);
+}
+/* =====================================================
+   TÍTULO DO MODELO
+===================================================== */
+
+.meu-modelo h2 {
+    color: #174b3d;
+    font-family: var(--fonte-titulo);
+    font-size: var(--fs-md);
+}
+.meus-modelos-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+.meus-modelos-grid {
+        grid-template-columns: 1fr;
+    }
+
+/* ---------- Correção dos campos do modal (texto cortado) ---------- */
+.safra-modal input[type="text"],
+.safra-modal select {
+    height: 46px;
+    padding: 0 12px;
+    line-height: normal;
+    overflow: visible;
+}
+.safra-modal select { padding-right: 8px; cursor: pointer; }
+.safra-modal textarea { min-height: 76px; line-height: 1.4; }
+.safra-modal .campo { margin-bottom: 16px; }
+.fonte-real select { margin-bottom: 10px; }
+.modal-rodape .btn-principal,
+.modal-rodape .btn-secundario { height: 46px; padding: 0 20px; display: inline-flex; align-items: center; justify-content: center; }
+
+/* ---------- Área "Meus modelos" ---------- */
+.meus-modelos {
+    margin-bottom: 22px;
+}
+.meus-modelos-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.meus-modelos-topo h2 {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-size: var(--fs-xl);
+    color: #1f3a2c;
+}
+.meus-modelos-topo p { margin: 3px 0 0; color: #6b7a70; font-size: var(--fs-sm); }
+.meus-modelos-total {
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #e1f1dc;
+    color: #37804d;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+}
+.meu-modelo.entrando { animation: safra-card-entra 0.9s ease both; }
+.meu-modelo.saindo { opacity: 0; transform: scale(0.94); transition: all 0.3s ease; }
+
+.meu-modelo-acoes { display: inline-flex; align-items: center; gap: 12px; }
+.btn-lixo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid #efc9c4;
+    border-radius: 8px;
+    background: #fff;
+    color: #b23b2e;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.btn-lixo svg { width: 17px; height: 17px; }
+.btn-lixo:hover { background: #c9483a; border-color: #c9483a; color: #fff; }
+
+@media (max-width: 1100px) {
+    .meus-modelos-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 700px) {
+    .meus-modelos-grid { grid-template-columns: 1fr; }
+}
+
+
+/* =====================================================================
+   ALERTAS, PREVISÕES E RELATÓRIOS (dados reais)
+===================================================================== */
+
+/* ---------- Alertas ---------- */
+.alerta-item { flex-wrap: wrap; }
+.alerta-item.lido, .alerta-destaque.lido { opacity: 0.55; }
+.alerta-item.saindo { opacity: 0; transform: translateX(16px); transition: all 0.26s ease; }
+.alerta-vazio { padding: 22px 8px; text-align: center; color: #6b7a70; font-size: var(--fs-sm); }
+
+.status-alerta.urgente { background: #f8dcd8; color: #b23b2e; }
+
+.alerta-acoes { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+.alerta-mini {
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid #dce1da;
+    border-radius: 8px;
+    background: #fff;
+    color: #356255;
+    font-family: var(--fonte-texto);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.alerta-mini:hover { background: #e1f1dc; border-color: #218149; color: #1d6b3c; }
+.alerta-mini.perigo { width: 30px; padding: 0; font-size: 18px; line-height: 1; color: #b23b2e; border-color: #efc9c4; }
+.alerta-mini.perigo:hover { background: #c9483a; border-color: #c9483a; color: #fff; }
+
+.alerta-destaque { flex-wrap: wrap; gap: 14px; }
+.alerta-destaque-acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.alerta-destaque-acoes .btn-alerta:not(.vermelho-btn) {
+    background: #fff;
+    color: #356255;
+    border: 1px solid #dce1da;
+}
+
+/* ---------- Previsões ---------- */
+.tabela-card .tag.erro { background: #f8dcd8; color: #b23b2e; }
+
+/* ---------- Relatórios: janela de visualização ---------- */
+.rel-tipo {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: #e1f1dc;
+    color: #37804d;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+}
+.rel-corpo { max-height: 62vh; overflow-y: auto; margin: 8px -4px 0; padding: 0 4px; }
+.rel-cab h2 { margin: 6px 0 4px; font-family: var(--fonte-titulo); font-size: var(--fs-xl); color: #1f3a2c; }
+.rel-cab p { margin: 0 0 16px; color: #6b7a70; font-size: var(--fs-sm); }
+.rel-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
+.rel-kpis div { padding: 12px 14px; border: 1px solid #e3ece1; border-radius: 10px; background: #f8faf6; }
+.rel-kpis span { display: block; margin-bottom: 4px; color: #6b7a70; font-size: var(--fs-xs); font-weight: 600; }
+.rel-kpis strong { color: #1f3a2c; font-size: var(--fs-lg, 18px); }
+.rel-secao { margin-top: 18px; }
+.rel-secao h3 { margin: 0 0 8px; font-size: var(--fs-md, 16px); color: #1f3a2c; }
+.rel-tabela { overflow-x: auto; border: 1px solid #e3ece1; border-radius: 10px; }
+.rel-tabela table { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); }
+.rel-tabela th { background: #f3f6f0; color: #356255; text-align: left; font-weight: 700; }
+.rel-tabela th, .rel-tabela td { padding: 9px 12px; border-bottom: 1px solid #edf1ea; white-space: nowrap; }
+.rel-tabela tr:last-child td { border-bottom: none; }
+.rel-nota { margin: 8px 0 0; color: #6b7a70; font-size: var(--fs-xs); }
+
+@media (max-width: 700px) {
+    .rel-kpis { grid-template-columns: 1fr 1fr; }
+    .alerta-acoes { margin-left: 0; justify-content: flex-start; }
+}
+
+
+/* =====================================================================
+   PREVISÕES: cards do topo (Previsões ativas, Precisão média,
+   Previsões em atenção, Última atualização) em grade 2x2,
+   ícone à esquerda e texto à direita.
+   (Escopo só na página de Previsões; Dados e Relatórios não mudam.)
+===================================================================== */
+#analista\.previsoes .indicadores {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+    align-items: stretch;
+}
+
+#analista\.previsoes .indicadores .indicador,
+#analista\.previsoes .indicadores .indicador:last-child {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 18px;
+    min-height: 112px;
+    margin: 0;
+    padding: 20px 24px;
+    text-align: left;
+}
+
+#analista\.previsoes .indicadores .indicador-icon {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+}
+
+#analista\.previsoes .indicadores .indicador > div:last-child {
+    min-width: 0;
+    text-align: left;
+}
+
+#analista\.previsoes .indicadores .indicador span {
+    margin: 0 0 4px;
+    text-align: left;
+}
+
+#analista\.previsoes .indicadores .indicador strong {
+    margin: 0 0 4px;
+    line-height: 1.15;
+    text-align: left;
+}
+
+#analista\.previsoes .indicadores .indicador small {
+    margin: 0;
+    text-align: left;
+}
+
+@media (max-width: 700px) {
+    #analista\.previsoes .indicadores {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* Relatórios: cards de indicadores em grade 2x2 (escopo só nesta página) */
+#analista\.relatorios .indicadores {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+    align-items: stretch;
+}
+
+@media (max-width: 700px) {
+    #analista\.relatorios .indicadores {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,22 @@
+◇ injected env (17) from .env
+◇ injected env (0) from .env
+◇ injected env (0) from .env
+Servidor rodando em http://localhost:3001
+[MISSAO TESTE1] IDOR bloqueou: usuario 4 tentou GET /dispositivos/2/leituras (dispositivo 2 é de outro usuário) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] IDOR bloqueou: usuario 4 tentou PUT /dispositivos/2/configuracao (dispositivo 2 é de outro usuário) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] IDOR bloqueou: usuario 4 tentou POST /dispositivos/2/comandos (dispositivo 2 é de outro usuário) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] IDOR bloqueou: usuario 4 tentou GET /dispositivos/0002/leituras (dispositivo 2 é de outro usuário) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] IDOR bloqueou: usuario 4 tentou GET /dispositivos/2.0/leituras (dispositivo 2 é de outro usuário) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] IDOR bloqueou: usuario 4 tentou GET /dispositivos/2/leituras?usuario_id=1 (dispositivo 2 é de outro usuário) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] IDOR bloqueou: usuario 4 tentou GET /dispositivos/2/leituras (dispositivo 2 é de outro usuário) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] IDOR bloqueou: usuario 4 tentou POST /dispositivos/2/comandos (dispositivo 2 é de outro usuário) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: código ausente, errado, vencido ou já usado (usuario 6) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: código ausente, errado, vencido ou já usado (usuario 6) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: código ausente, errado, vencido ou já usado (usuario 6) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: código ausente, errado, vencido ou já usado (usuario 6) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: código ausente, errado, vencido ou já usado (usuario 6) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: código ausente, errado, vencido ou já usado (usuario 6) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: código ausente, errado, vencido ou já usado (usuario 6) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: código ausente, errado, vencido ou já usado (usuario 6) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: código ausente, errado, vencido ou já usado (usuario 6) • Navegador desconhecido • IP 127.0.0.1
+[MISSAO TESTE1] 2FA bloqueou: usuario 6 temporariamente bloqueado por excesso de tentativas • Navegador desconhecido • IP 127.0.0.1

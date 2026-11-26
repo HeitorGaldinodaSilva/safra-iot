@@ -631,6 +631,208 @@ async function buscarUsuarioDaTela(id, esq) {
   return linhas.length ? usuarioParaTela(linhas[0]) : null;
 }
 
+// ---------- Relatórios (somente administrador) ----------
+// GET /relatorios/resumo?dias=30  -> números dos cards, das caixas e dos relatórios recentes
+// GET /relatorios/:tipo?dias=30   -> tabela do relatório (usuarios, dados, atividades, sistema, alertas, geral)
+//   &registrar=1 grava em log_sistema que o relatório foi gerado (usado ao baixar/imprimir).
+const TIPOS_RELATORIO = {
+  usuarios: 'Relatório de usuários', dados: 'Relatório de dados', atividades: 'Relatório de atividades',
+  sistema: 'Relatório do sistema', alertas: 'Relatório de alertas', geral: 'Relatório geral'
+};
+const diasDe = req => { const d = parseInt(req.query.dias, 10); return [7, 30, 180, 365].includes(d) ? d : 30; };
+const rotuloPeriodo = d => ({ 7: 'Últimos 7 dias', 30: 'Últimos 30 dias', 180: 'Últimos 6 meses', 365: 'Último ano' }[d]);
+const fmtData = v => v ? new Date(v).toLocaleString('pt-BR', { timeZone: 'America/Recife' }) : '—';
+
+async function contarRelatorios(dias) {
+  const q = async (sql, p = []) => { try { return (await pool.query(sql, p))[0]; } catch (e) { return null; } };
+  const usu = await q('SELECT perfil, status FROM usuario') || [];
+  const ativos = usu.filter(l => !statusInativo(l.status)).length;
+  const disp = await q('SELECT COUNT(*) AS n FROM dispositivo');
+  const ev = (await q('SELECT COUNT(*) AS n FROM log_sistema WHERE data_hora >= NOW() - INTERVAL ? DAY', [dias]))[0].n;
+  const falhas = (await q("SELECT COUNT(*) AS n FROM log_sistema WHERE status = 'Falha' AND data_hora >= NOW() - INTERVAL ? DAY", [dias]))[0].n;
+  return { usuarios: usu.length, ativos, dispositivos: disp ? Number(disp[0].n) : 0, eventos: Number(ev), alertas: Number(falhas) };
+}
+
+app.get('/relatorios/resumo', autenticar, somenteAdmin, async (req, res) => {
+  try {
+    const dias = diasDe(req);
+    const c = await contarRelatorios(dias);
+    const [[m]] = await pool.query(
+      `SELECT COUNT(*) AS n FROM log_sistema WHERE acao = 'Relatório gerado'
+         AND YEAR(data_hora) = YEAR(NOW()) AND MONTH(data_hora) = MONTH(NOW())`);
+    const [recentes] = await pool.query(
+      `SELECT descricao, DATE(data_hora) = CURDATE() AS hoje, DATE(data_hora) = CURDATE() - INTERVAL 1 DAY AS ontem,
+              DATE_FORMAT(data_hora, '%d/%m/%Y') AS data, DATE_FORMAT(data_hora, '%H:%i') AS hora
+         FROM log_sistema WHERE acao = 'Relatório gerado' ORDER BY data_hora DESC, id DESC LIMIT 3`);
+    res.json({
+      sucesso: true, dias, periodo: rotuloPeriodo(dias), contagens: c, gerados_mes: Number(m.n),
+      sistema_online_s: Math.round(process.uptime()), sessoes: sessoes.size,
+      recentes: recentes.map(r => {
+        const [tipo, formato, d] = String(r.descricao || '').split('|');
+        return { tipo, formato, dias: Number(d) || 30, quando: `${r.hoje ? 'hoje' : r.ontem ? 'ontem' : r.data}, ${r.hora}` };
+      })
+    });
+  } catch (erro) {
+    res.status(500).json({ sucesso: false, erro: erro.message });
+  }
+});
+
+async function montarRelatorio(tipo, dias) {
+  const periodo = rotuloPeriodo(dias);
+  const sql = async (texto, p = []) => (await pool.query(texto, p))[0];
+  if (tipo === 'usuarios') {
+    const esq = await carregarEsquema();
+    const l = await sql(`SELECT u.nome, u.email, u.telefone, u.perfil, u.status
+        ${esq.colunaCriado ? `, u.\`${esq.colunaCriado}\` AS criado_em` : ''},
+        (SELECT MAX(x.data_hora) FROM log_sistema x WHERE x.usuario_id = u.id AND x.acao = 'Login realizado') AS ultimo_acesso
+        FROM usuario u ORDER BY u.nome`);
+    const linhas = l.map(u => {
+      const t = usuarioParaTela(u);
+      return [u.nome, u.email, u.telefone || '—', PERFIS[t.perfil] || t.perfil,
+        t.status === 'ativo' ? 'Ativo' : t.status === 'inativo' ? 'Inativo' : 'Pendente', fmtData(u.ultimo_acesso)];
+    });
+    const ativos = l.filter(u => !statusInativo(u.status)).length;
+    return { titulo: TIPOS_RELATORIO[tipo], periodo: 'Situação atual', colunas: ['Nome', 'E-mail', 'Telefone', 'Perfil', 'Status', 'Último acesso'],
+      linhas, resumo: `${l.length} usuário(s) • ${ativos} ativo(s) • ${l.length - ativos} inativo(s)` };
+  }
+  if (tipo === 'atividades' || tipo === 'alertas') {
+    const soFalhas = tipo === 'alertas';
+    const l = await sql(
+      `SELECT COALESCE(u.nome, 'Sistema') AS usuario, g.acao, g.tipo, g.descricao, g.status,
+              DATE_FORMAT(g.data_hora, '%d/%m/%Y %H:%i:%s') AS quando
+         FROM log_sistema g LEFT JOIN usuario u ON u.id = g.usuario_id
+        WHERE g.data_hora >= NOW() - INTERVAL ? DAY ${soFalhas ? "AND g.status = 'Falha'" : ''}
+        ORDER BY g.data_hora DESC, g.id DESC LIMIT 5000`, [dias]);
+    return { titulo: TIPOS_RELATORIO[tipo], periodo, colunas: ['Data e hora', 'Usuário', 'Ação', 'Tipo', 'Descrição', 'Status'],
+      linhas: l.map(e => [e.quando, e.usuario, e.acao, e.tipo, e.descricao || '—', e.status]),
+      resumo: soFalhas ? `${l.length} alerta(s) de falha registrados` : `${l.length} evento(s) registrados` };
+  }
+  if (tipo === 'dados') {
+    let l = [];
+    try {
+      l = await sql(
+        `SELECT d.id, d.nome, COALESCE(u.nome, '—') AS dono, d.canal_thingspeak, d.intervalo_s, d.limite_temp_max,
+                (SELECT COUNT(*) FROM dispositivo_comando c WHERE c.dispositivo_id = d.id
+                    AND c.criado_em >= NOW() - INTERVAL ? DAY) AS comandos
+           FROM dispositivo d LEFT JOIN usuario u ON u.id = d.usuario_id ORDER BY d.nome`, [dias]);
+    } catch (e) { /* tabela ainda não criada */ }
+    return { titulo: TIPOS_RELATORIO[tipo], periodo, colunas: ['Dispositivo', 'Responsável', 'Canal ThingSpeak', 'Intervalo (s)', 'Limite temp. (°C)', 'Comandos no período'],
+      linhas: l.map(d => [d.nome, d.dono, d.canal_thingspeak || 'Padrão (.env)', d.intervalo_s, d.limite_temp_max, d.comandos]),
+      resumo: `${l.length} dispositivo(s) cadastrado(s)` };
+  }
+  if (tipo === 'sistema') {
+    const t0 = Date.now();
+    const [[agora]] = await pool.query("SELECT DATE_FORMAT(NOW(), '%d/%m/%Y %H:%i:%s') AS agora");
+    const ms = Date.now() - t0;
+    const [[f]] = await pool.query("SELECT COUNT(*) AS n FROM log_sistema WHERE status = 'Falha' AND data_hora >= NOW() - INTERVAL ? DAY", [dias]);
+    const [[e]] = await pool.query('SELECT COUNT(*) AS n FROM log_sistema WHERE data_hora >= NOW() - INTERVAL ? DAY', [dias]);
+    const h = Math.floor(process.uptime() / 3600), m = Math.floor((process.uptime() % 3600) / 60);
+    const taxa = e.n ? (100 - (f.n / e.n) * 100).toFixed(1).replace('.', ',') + '%' : '—';
+    return { titulo: TIPOS_RELATORIO[tipo], periodo, colunas: ['Indicador', 'Valor'], linhas: [
+      ['API Node (Safra)', 'Online'], ['Tempo ligado desde a última reinicialização', `${h} h ${m} min`],
+      ['Banco de dados', `Conectado (${ms} ms)`], ['Hora do banco', agora.agora], ['Sessões ativas agora', sessoes.size],
+      ['Eventos no período', Number(e.n)], ['Falhas no período', Number(f.n)], ['Taxa de eventos sem falha', taxa],
+      ['Versão do Node.js', process.version]
+    ], resumo: 'Funcionamento dos serviços Node e banco de dados' };
+  }
+  // geral
+  const c = await contarRelatorios(dias);
+  const [perf] = await pool.query('SELECT perfil FROM usuario');
+  const porPerfil = {};
+  perf.forEach(p => { const k = PERFIS[chavePerfil(p.perfil)] || 'Outro'; porPerfil[k] = (porPerfil[k] || 0) + 1; });
+  const [porTipo] = await pool.query('SELECT tipo, COUNT(*) AS n FROM log_sistema WHERE data_hora >= NOW() - INTERVAL ? DAY GROUP BY tipo ORDER BY n DESC', [dias]);
+  const linhas = [
+    ['Usuários cadastrados', c.usuarios], ['Usuários ativos', c.ativos], ['Dispositivos cadastrados', c.dispositivos],
+    ['Eventos registrados', c.eventos], ['Falhas / alertas', c.alertas], ['Sessões ativas agora', sessoes.size],
+    ...Object.entries(porPerfil).map(([k, n]) => [`Usuários • ${k}`, n]),
+    ...porTipo.map(t => [`Eventos • ${t.tipo}`, Number(t.n)])
+  ];
+  return { titulo: TIPOS_RELATORIO.geral, periodo, colunas: ['Indicador', 'Valor'], linhas, resumo: 'Visão consolidada dos indicadores do Safra' };
+}
+
+app.get('/relatorios/:tipo', autenticar, somenteAdmin, async (req, res) => {
+  try {
+    const tipo = req.params.tipo;
+    if (!TIPOS_RELATORIO[tipo]) return res.status(404).json({ sucesso: false, erro: 'Relatório inexistente.' });
+    const dias = diasDe(req);
+    const rel = await montarRelatorio(tipo, dias);
+    if (req.query.registrar === '1') {
+      const fmt = ['pdf', 'xls', 'csv'].includes(req.query.formato) ? req.query.formato : 'tela';
+      await registrarLog(req.usuarioId, 'Relatório', 'Relatório gerado', `${tipo}|${fmt}|${dias}`);
+    }
+    res.json({ sucesso: true, tipo, gerado_em: new Date().toISOString(), ...rel });
+  } catch (erro) {
+    res.status(500).json({ sucesso: false, erro: erro.message });
+  }
+});
+
+// ---------- Logs do sistema (somente administrador) ----------
+// Lê a tabela log_sistema (preenchida por registrarLog) com busca, filtros e paginação.
+app.get('/logs', autenticar, somenteAdmin, async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim().slice(0, 80);
+    const tipo = String(req.query.tipo || '').trim();
+    const periodo = String(req.query.periodo || '30');
+    const todos = req.query.todos === '1'; // exportação: sem paginação (limite de 5000)
+    const porPagina = todos ? 5000 : Math.min(Math.max(parseInt(req.query.por_pagina, 10) || 10, 1), 100);
+    const pagina = Math.max(parseInt(req.query.pagina, 10) || 1, 1);
+
+    const where = [];
+    const params = [];
+    if (periodo === 'hoje') where.push('DATE(l.data_hora) = CURDATE()');
+    else if (periodo === '7') where.push('l.data_hora >= NOW() - INTERVAL 7 DAY');
+    else if (periodo === '30') where.push('l.data_hora >= NOW() - INTERVAL 30 DAY');
+    if (tipo === 'falha') where.push("l.status = 'Falha'");
+    else if (tipo) { where.push('l.tipo = ?'); params.push(tipo); }
+    if (q) {
+      where.push('(u.nome LIKE ? OR l.acao LIKE ? OR l.descricao LIKE ?)');
+      params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+    }
+    const filtro = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const de = 'FROM log_sistema l LEFT JOIN usuario u ON u.id = l.usuario_id';
+
+    const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total ${de} ${filtro}`, params);
+    const [eventos] = await pool.query(
+      `SELECT l.id, l.acao, l.tipo, l.descricao, l.status,
+              DATE_FORMAT(l.data_hora, '%d/%m/%Y') AS data,
+              DATE_FORMAT(l.data_hora, '%H:%i:%s') AS hora,
+              DATE(l.data_hora) = CURDATE() AS hoje,
+              COALESCE(u.nome, 'Sistema') AS usuario
+       ${de} ${filtro}
+       ORDER BY l.data_hora DESC, l.id DESC
+       LIMIT ? OFFSET ?`,
+      [...params, porPagina, (pagina - 1) * porPagina]
+    );
+
+    const [[r]] = await pool.query(
+      `SELECT
+         SUM(DATE(data_hora) = CURDATE()) AS hoje,
+         SUM(tipo = 'Login' AND data_hora >= NOW() - INTERVAL 24 HOUR) AS acessos24h,
+         SUM(status = 'Falha' AND tipo = 'Login' AND data_hora >= NOW() - INTERVAL 24 HOUR) AS avisos24h,
+         SUM(status = 'Falha' AND tipo <> 'Login' AND data_hora >= NOW() - INTERVAL 24 HOUR) AS erros24h,
+         TIMESTAMPDIFF(SECOND, MAX(data_hora), NOW()) AS segundos_ultimo
+       FROM log_sistema`
+    );
+
+    res.json({
+      sucesso: true,
+      eventos: eventos.map(e => ({ ...e, hoje: !!e.hoje })),
+      total,
+      pagina,
+      por_pagina: porPagina,
+      resumo: {
+        hoje: Number(r.hoje || 0),
+        acessos24h: Number(r.acessos24h || 0),
+        avisos24h: Number(r.avisos24h || 0),
+        erros24h: Number(r.erros24h || 0),
+        segundos_ultimo: r.segundos_ultimo === null ? null : Number(r.segundos_ultimo)
+      }
+    });
+  } catch (erro) {
+    res.status(500).json({ sucesso: false, erro: erro.message });
+  }
+});
+
 app.get('/usuarios', autenticar, somenteAdmin, async (req, res) => {
   try {
     const esq = await carregarEsquema();
@@ -756,6 +958,162 @@ app.delete('/usuarios/:id', autenticar, somenteAdmin, async (req, res) => {
     encerrarSessoesDe(id);
     await registrarLog(req.usuarioId, 'Usuário', 'Usuário excluído', alvo[0].nome);
     res.json({ sucesso: true });
+  } catch (erro) {
+    res.status(500).json({ sucesso: false, erro: erro.message });
+  }
+});
+
+// ---------- Permissões por perfil ----------
+// A matriz (perfil x recurso) fica na tabela perfil_permissao do MySQL, criada sozinha no primeiro uso.
+// Tudo começa liberado (igual ao que cada perfil já via). O comum.js do frontend pergunta
+// GET /permissoes/minhas e esconde os menus/telas bloqueados. Só o administrador altera.
+const RECURSOS_PERMISSAO = {
+  dashboard: 'Dashboard', lavouras: 'Lavouras', financeiro: 'Financeiro', modelos: 'Modelos preditivos',
+  dados: 'Dados', usuarios: 'Usuários', permissoes: 'Permissões', logs: 'Logs do sistema',
+  relatorios: 'Relatórios', alertas: 'Alertas', exportacao: 'Exportação'
+};
+// quais recursos têm tela em cada perfil (só esses fazem sentido na matriz)
+const RECURSOS_DO_PERFIL = {
+  produtor: ['dashboard', 'lavouras', 'financeiro', 'relatorios', 'alertas', 'exportacao'],
+  analista: ['dashboard', 'modelos', 'dados', 'relatorios', 'alertas'],
+  administrador: ['dashboard', 'usuarios', 'permissoes', 'dados', 'logs', 'relatorios', 'alertas']
+};
+// o administrador nunca pode perder essas duas (senão ninguém mais consegue liberar nada)
+const RECURSOS_TRAVADOS = { administrador: ['usuarios', 'permissoes'] };
+const PERFIS_PERMISSAO = {
+  produtor: { nome: 'Produtor', curto: 'Produtor', descricao: 'Acesso às informações de produção, lavouras e histórico.' },
+  analista: { nome: 'Analista de Dados', curto: 'Analista', descricao: 'Acesso aos dados, modelos preditivos e previsões.' },
+  administrador: { nome: 'Administrador', curto: 'Administrador', descricao: 'Acesso completo ao gerenciamento do sistema.' }
+};
+
+let tabelaPermissoesPronta = null;
+function garantirTabelaPermissoes() {
+  if (!tabelaPermissoesPronta) {
+    tabelaPermissoesPronta = (async () => {
+      await pool.query(
+        `CREATE TABLE IF NOT EXISTS perfil_permissao (
+           perfil VARCHAR(20) NOT NULL,
+           recurso VARCHAR(30) NOT NULL,
+           permitido TINYINT(1) NOT NULL DEFAULT 1,
+           atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+           PRIMARY KEY (perfil, recurso)
+         )`
+      );
+      const padrao = [];
+      Object.keys(RECURSOS_DO_PERFIL).forEach(perfil => {
+        RECURSOS_DO_PERFIL[perfil].forEach(recurso => padrao.push([perfil, recurso, 1]));
+      });
+      await pool.query('INSERT IGNORE INTO perfil_permissao (perfil, recurso, permitido) VALUES ?', [padrao]);
+    })().catch(erro => { tabelaPermissoesPronta = null; throw erro; });
+  }
+  return tabelaPermissoesPronta;
+}
+
+async function lerMatrizPermissoes() {
+  await garantirTabelaPermissoes();
+  const [linhas] = await pool.query('SELECT perfil, recurso, permitido FROM perfil_permissao');
+  const matriz = {};
+  Object.keys(RECURSOS_DO_PERFIL).forEach(perfil => {
+    matriz[perfil] = {};
+    RECURSOS_DO_PERFIL[perfil].forEach(r => { matriz[perfil][r] = true; });
+  });
+  linhas.forEach(l => {
+    if (matriz[l.perfil] && l.recurso in matriz[l.perfil]) matriz[l.perfil][l.recurso] = !!l.permitido;
+  });
+  Object.keys(RECURSOS_TRAVADOS).forEach(perfil => {
+    RECURSOS_TRAVADOS[perfil].forEach(r => { matriz[perfil][r] = true; });
+  });
+  return matriz;
+}
+
+// o que o usuário logado pode abrir (usado pelo frontend de todos os perfis)
+app.get('/permissoes/minhas', autenticar, async (req, res) => {
+  try {
+    const [u] = await pool.query('SELECT perfil FROM usuario WHERE id = ?', [req.usuarioId]);
+    if (u.length === 0) return res.status(404).json({ sucesso: false, erro: 'Usuário não encontrado.' });
+    const perfil = chavePerfil(u[0].perfil);
+    const matriz = await lerMatrizPermissoes();
+    res.json({ sucesso: true, perfil, recursos: matriz[perfil] || null });
+  } catch (erro) {
+    res.status(500).json({ sucesso: false, erro: erro.message });
+  }
+});
+
+app.get('/permissoes', autenticar, somenteAdmin, async (req, res) => {
+  try {
+    const matriz = await lerMatrizPermissoes();
+    const [usuarios] = await pool.query('SELECT perfil, status FROM usuario');
+    const contagem = { produtor: 0, analista: 0, administrador: 0 };
+    let ativos = 0;
+    usuarios.forEach(l => {
+      const k = chavePerfil(l.perfil);
+      if (k in contagem) contagem[k] += 1;
+      if (!statusInativo(l.status)) ativos += 1;
+    });
+
+    let alteracoes = 0;
+    try {
+      const [r] = await pool.query(
+        "SELECT COUNT(*) AS n FROM log_sistema WHERE acao = 'Permissões alteradas' AND data_hora >= (NOW() - INTERVAL 7 DAY)"
+      );
+      alteracoes = Number(r[0].n) || 0;
+    } catch (e) { /* sem log: segue com zero */ }
+
+    const perfis = Object.keys(PERFIS_PERMISSAO).map(chave => ({
+      chave,
+      nome: PERFIS_PERMISSAO[chave].nome,
+      curto: PERFIS_PERMISSAO[chave].curto,
+      descricao: PERFIS_PERMISSAO[chave].descricao,
+      usuarios: contagem[chave],
+      aplica: RECURSOS_DO_PERFIL[chave],
+      travadas: RECURSOS_TRAVADOS[chave] || []
+    }));
+    const recursos = Object.keys(RECURSOS_PERMISSAO).map(chave => ({ chave, rotulo: RECURSOS_PERMISSAO[chave] }));
+    let ativas = 0, possiveis = 0;
+    Object.keys(matriz).forEach(p => Object.keys(matriz[p]).forEach(r => { possiveis += 1; if (matriz[p][r]) ativas += 1; }));
+
+    res.json({
+      sucesso: true,
+      perfis, recursos, matriz,
+      cards: {
+        perfis: perfis.length,
+        usuarios_ativos: ativos,
+        usuarios_total: usuarios.length,
+        permissoes_ativas: ativas,
+        permissoes_total: possiveis,
+        alteracoes_7d: alteracoes
+      }
+    });
+  } catch (erro) {
+    res.status(500).json({ sucesso: false, erro: erro.message });
+  }
+});
+
+app.put('/permissoes/:perfil', autenticar, somenteAdmin, async (req, res) => {
+  try {
+    const perfil = semAcento(req.params.perfil);
+    if (!RECURSOS_DO_PERFIL[perfil]) return res.status(404).json({ sucesso: false, erro: 'Perfil não encontrado.' });
+    const enviado = (req.body && req.body.recursos) || {};
+    const atual = (await lerMatrizPermissoes())[perfil];
+    const travadas = RECURSOS_TRAVADOS[perfil] || [];
+
+    const linhas = [], mudancas = [];
+    RECURSOS_DO_PERFIL[perfil].forEach(r => {
+      let valor = typeof enviado[r] === 'boolean' ? enviado[r] : atual[r];
+      if (travadas.includes(r)) valor = true;
+      if (valor !== atual[r]) mudancas.push(`${valor ? '+' : '-'} ${RECURSOS_PERMISSAO[r]}`);
+      linhas.push([perfil, r, valor ? 1 : 0]);
+    });
+
+    await garantirTabelaPermissoes();
+    await pool.query(
+      'INSERT INTO perfil_permissao (perfil, recurso, permitido) VALUES ? ON DUPLICATE KEY UPDATE permitido = VALUES(permitido)',
+      [linhas]
+    );
+    if (mudancas.length) {
+      await registrarLog(req.usuarioId, 'Permissão', 'Permissões alteradas', `${PERFIS_PERMISSAO[perfil].nome}: ${mudancas.join(', ')}`);
+    }
+    res.json({ sucesso: true, recursos: (await lerMatrizPermissoes())[perfil] });
   } catch (erro) {
     res.status(500).json({ sucesso: false, erro: erro.message });
   }

@@ -1,0 +1,26 @@
+# missao TESTE1 | idor | fase antes | 2026-11-23T01:25:21.036Z | http://localhost:3001
+# Teste IDOR | missao TESTE1 | fase antes | http://localhost:3001
+Usuário A (a.teste@safra.test) dono do dispositivo 1; usuário B (b.teste@safra.test) dono do dispositivo 2
+
+== Dono usando o próprio dispositivo (tem que continuar funcionando) ==
+OK   | B lê as leituras do dispositivo B                              | HTTP 200 | esperado: 2xx
+OK   | A lê as leituras do dispositivo A                              | HTTP 200 | esperado: 2xx
+OK   | B altera a configuração do dispositivo B                       | HTTP 200 | esperado: 2xx
+OK   | B manda comando ao dispositivo B                               | HTTP 202 | esperado: 2xx
+
+== A troca o ID na requisição e mira o dispositivo de B (2) ==
+OK   | A lê as leituras do dispositivo de B                           | HTTP 200 | esperado: 2xx (vulnerável)
+OK   | A altera a configuração do dispositivo de B                    | HTTP 200 | esperado: 2xx (vulnerável)
+OK   | A manda comando ao dispositivo de B                            | HTTP 202 | esperado: 2xx (vulnerável)
+
+== Tentativas de contorno (todas devem falhar depois do controle) ==
+OK   | ID com zeros à esquerda (000N)                                 | HTTP 200 | esperado: 2xx (vulnerável)
+OK   | ID com sufixo decimal (N.0)                                    | HTTP 200 | esperado: 2xx (vulnerável)
+OK   | ID de B + ?usuario_id=A na query                               | HTTP 200 | esperado: 2xx (vulnerável)
+OK   | ID de B + cabeçalho X-Usuario-Id                               | HTTP 200 | esperado: 2xx (vulnerável)
+OK   | ID de B + usuario_id no corpo do comando                       | HTTP 202 | esperado: 2xx (vulnerável)
+OK   | Sem token                                                      | HTTP 401 | esperado: 401
+
+Configuração de B ao final (depois da limpeza): {"id":2,"nome":"ESP32 Teste B","intervalo_s":60,"limite_temp_max":32}
+
+RESULTADO (antes): todas as verificações bateram com o esperado.

@@ -14,7 +14,7 @@
 (function () {
     const BASE = (window.SAFRA_API_PRODUTOR || window.SAFRA_API_ANALISTA || "http://localhost:8000").replace(/\/$/, "");
     const INTERVALO_MS = 10 * 60 * 1000;   // a API guarda o resultado por 10 min
-    let carregando = false;
+    let carregando = false, ultimo = null;
 
     const todos = (chave) => document.querySelectorAll(`[data-api="${chave}"]`);
     const texto = (chave, valor) => todos(chave).forEach(el => { el.textContent = valor; });
@@ -127,6 +127,7 @@
     }
 
     function aplicar(d) {
+        ultimo = d;
         desenharData();
         texto("clima-temp-topo", `${nf(d.atual.temperatura)}°C`);
         texto("clima-condicao-topo", d.atual.condicao);
@@ -141,6 +142,74 @@
         desenharJanela(d.janela_ideal);
         desenharAlertas(d.alertas || []);
     }
+
+    /* ---------- "Ver detalhes" do card de colheita: janela ideal dia a dia ---------- */
+    function el(tag, estilo, t) {
+        const e = document.createElement(tag);
+        if (estilo) e.style.cssText = estilo;
+        if (t !== undefined) e.textContent = t;
+        return e;
+    }
+
+    function fecharDetalhes() { const m = document.getElementById("modalColheita"); if (m) m.remove(); }
+
+    function abrirDetalhes() {
+        fecharDetalhes();
+        const fundo = el("div", "position:fixed;inset:0;background:rgba(20,35,30,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px");
+        fundo.id = "modalColheita";
+        const caixa = el("div", "background:#fff;border-radius:16px;max-width:880px;width:100%;max-height:90vh;overflow:auto;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.25);font-family:var(--fonte-texto,inherit)");
+        caixa.setAttribute("role", "dialog"); caixa.setAttribute("aria-modal", "true");
+        fundo.appendChild(caixa);
+
+        if (!ultimo) {
+            caixa.append(el("h2", "margin:0 0 8px;color:#173f35", "Previsão indisponível"),
+                el("p", "color:#5f6d68", "Ainda não foi possível carregar a previsão do tempo. Tente novamente em instantes."));
+        } else {
+            const j = ultimo.janela_ideal, dias = ultimo.dias || [], hoje = dias[0] ? dias[0].data : null;
+            const aberta = j && hoje && j.inicio <= hoje;
+            caixa.append(el("h2", "margin:0 0 6px;color:#173f35", aberta ? "Janela ideal de colheita aberta" : j ? "Próxima janela de colheita" : "Sem janela ideal nos próximos 7 dias"));
+            caixa.append(el("p", "margin:0 0 16px;color:#5f6d68;font-size:14px", j
+                ? `Período favorável: ${dm(j.inicio)} a ${dm(j.fim)} (${j.dias} dia${j.dias > 1 ? "s" : ""}). Considera dias secos, com temperatura e umidade dentro das faixas ideais. Fonte: Open-Meteo.`
+                : "Nenhum período seco, com temperatura e umidade dentro das faixas ideais. Fonte: Open-Meteo."));
+
+            const tabela = el("table", "width:100%;border-collapse:collapse;font-size:13px");
+            const cab = el("tr");
+            ["Dia", "Condição", "Máx / Mín", "Umidade", "Chuva", "Colheita"].forEach(c => cab.appendChild(el("th", "text-align:left;padding:9px 10px;background:#f0f6f2;color:#31534a", c)));
+            tabela.appendChild(cab);
+            dias.forEach(x => {
+                const dentro = j && x.data >= j.inicio && x.data <= j.fim;
+                const d = new Date(x.data + "T12:00:00");
+                const tr = el("tr", dentro ? "background:#f1f8f3" : "");
+                const c = (t, e) => tr.appendChild(el("td", "padding:9px 10px;border-top:1px solid #eef3f0;" + (e || ""), t));
+                c(`${DIA[d.getDay()]} ${dm(x.data)}`, "font-weight:700");
+                c(x.condicao || "--");
+                c(`${nf(x.tmax)}° / ${nf(x.tmin)}°`);
+                c(x.umidade_media == null ? "--" : `${nf(x.umidade_media)}%`);
+                c(`${nf(x.chuva_mm, 1)} mm${x.prob_chuva != null ? ` (${nf(x.prob_chuva)}%)` : ""}`);
+                c(dentro ? "Ideal" : "Não ideal", dentro ? "color:#1d7a45;font-weight:700" : "color:#8a5a00");
+                tabela.appendChild(tr);
+            });
+            const rolagem = el("div", "overflow:auto;border:1px solid #e1e9e5;border-radius:10px");
+            rolagem.appendChild(tabela);
+            caixa.appendChild(rolagem);
+        }
+
+        const botoes = el("div", "display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:18px");
+        const estilo = "padding:10px 16px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;border:1px solid #cfe0d5;background:#fff;color:#218149";
+        [["Ver lavouras", "#lavoura"], ["Ver exportação", "#exportacao"], ["Ver alertas", "#alertas"]].forEach(([t, h]) => {
+            const a = el("a", estilo, t); a.href = h; a.addEventListener("click", fecharDetalhes); botoes.appendChild(a);
+        });
+        const x = el("button", estilo.replace("background:#fff;color:#218149", "background:#238349;color:#fff;border-color:#238349"), "Fechar");
+        x.type = "button"; x.addEventListener("click", fecharDetalhes); botoes.appendChild(x);
+        caixa.appendChild(botoes);
+
+        fundo.addEventListener("mousedown", (e) => { if (e.target === fundo) fecharDetalhes(); });
+        document.body.appendChild(fundo);
+        x.focus();
+    }
+
+    document.addEventListener("click", (e) => { if (e.target.closest(".card-colheita button")) abrirDetalhes(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharDetalhes(); });
 
     function indisponivel(mensagem) {
         // Não deixa valores de exemplo parecerem dados reais.

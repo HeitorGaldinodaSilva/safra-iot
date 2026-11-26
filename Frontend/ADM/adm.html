@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="adm.css">
   <link rel="stylesheet" href="../tema.css">
 </head>
-<body>
+<body data-pagina-padrao="adm.inicial">
 
   <!-- =====================================================================
        COMPONENTES COMPARTILHADOS
@@ -72,7 +72,7 @@
 
   <template id="tpl-topbar">
     <div class="tb-conta">
-    <button type="button" class="tb-sino" aria-label="Notificações: 3 novas"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg><span class="tb-badge">3</span></button>
+    <button type="button" class="tb-sino" aria-label="Notificações"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg><span class="tb-badge" style="display:none">0</span></button>
     <div class="tb-usuario" tabindex="0" role="button" aria-label="Conta de Júnior Fernandez">
     <span class="tb-avatar">JF</span>
     <span class="tb-dados"><strong>Júnior Fernandez</strong><small>Administrador do Sistema</small></span>
@@ -333,10 +333,10 @@
 <div class="opcoes">
 <div class="opcao">
 <div>
-<strong>Alertas da produção</strong>
+<strong>Segurança e acessos</strong>
 <span>
-                            Receba avisos sobre condições que podem afetar sua lavoura.
-                        </span>
+Falhas de login e acessos suspeitos ao sistema.
+</span>
 </div>
 <label class="switch">
 <input data-pref="notif_producao" checked="" type="checkbox"/>
@@ -347,8 +347,8 @@
 <div>
 <strong>Condições climáticas</strong>
 <span>
-                            Receba atualizações sobre temperatura, umidade e clima.
-                        </span>
+Calor, frio, chuva e outros avisos do Open-Meteo para a região.
+</span>
 </div>
 <label class="switch">
 <input data-pref="notif_clima" checked="" type="checkbox"/>
@@ -357,10 +357,10 @@
 </div>
 <div class="opcao">
 <div>
-<strong>Exportação e logística</strong>
+<strong>Fontes de dados e sistema</strong>
 <span>
-                            Receba informações sobre lotes, embarques e destinos.
-                        </span>
+Sensor ESP32, banco de dados, ThingSpeak e qualidade dos dados.
+</span>
 </div>
 <label class="switch">
 <input data-pref="notif_exportacao" checked="" type="checkbox"/>
@@ -369,59 +369,15 @@
 </div>
 <div class="opcao">
 <div>
-<strong>Relatórios</strong>
+<strong>Usuários e contas</strong>
 <span>
-                            Receba avisos quando novos relatórios estiverem disponíveis.
-                        </span>
+Cadastros, alterações e usuários que ainda não acessaram o sistema.
+</span>
 </div>
 <label class="switch">
 <input data-pref="notif_relatorios" type="checkbox"/>
 <span class="slider"></span>
 </label>
-</div>
-</div>
-</section>
-<!-- =========================
-             PREFERÊNCIAS
-        ========================== -->
-<section class="config-card">
-<div class="config-titulo">
-<div class="config-icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></div>
-<div>
-<h2>Preferências</h2>
-<p>
-                        Personalize a forma como você utiliza o sistema Safra.
-                    </p>
-</div>
-</div>
-<div class="preferencias-grid">
-<div class="campo">
-<label>Idioma</label>
-<select data-pref="idioma">
-<option value="pt-BR">Português (Brasil)</option>
-<option value="en">English</option>
-</select>
-</div>
-<div class="campo">
-<label>Unidade de peso</label>
-<select data-pref="unidade_peso">
-<option value="kg">Quilograma (kg)</option>
-<option value="ton">Tonelada (ton)</option>
-</select>
-</div>
-<div class="campo">
-<label>Unidade de área</label>
-<select data-pref="unidade_area">
-<option value="ha">Hectare (ha)</option>
-<option value="m2">Metro quadrado (m²)</option>
-</select>
-</div>
-<div class="campo">
-<label>Formato de data</label>
-<select data-pref="formato_data">
-<option value="DD/MM/AAAA">DD/MM/AAAA</option>
-<option value="MM/DD/AAAA">MM/DD/AAAA</option>
-</select>
 </div>
 </div>
 </section>
@@ -647,16 +603,10 @@
 <section class="status">
 <div class="status-icone"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
 <div class="status-texto">
-<strong>
-                    Sistema operando normalmente
-                </strong>
-<span>
-                    Todos os eventos estão sendo registrados corretamente.
-                </span>
+<strong><span data-log="status-titulo">Carregando…</span></strong>
+<span><span data-log="status-texto"></span></span>
 </div>
-<small>
-                Última atividade há 2 min
-            </small>
+<small data-log="ultima">—</small>
 </section>
 <!-- CARDS -->
 <section class="cards">
@@ -666,11 +616,9 @@
 <span>
                         Eventos hoje
                     </span>
-<strong>
-                        1.248
-                    </strong>
+<strong data-log="hoje">—</strong>
 <small>
-                        +12% este mês
+                        Desde 00:00
                     </small>
 </div>
 </div>
@@ -680,9 +628,7 @@
 <span>
                         Acessos registrados
                     </span>
-<strong>
-                        386
-                    </strong>
+<strong data-log="acessos">—</strong>
 <small>
                         Últimas 24 horas
                     </small>
@@ -694,11 +640,9 @@
 <span>
                         Avisos
                     </span>
-<strong>
-                        17
-                    </strong>
+<strong data-log="avisos">—</strong>
 <small>
-                        Requer atenção
+                        Falhas de login · 24 h
                     </small>
 </div>
 </div>
@@ -706,11 +650,9 @@
 <div class="card-icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5L2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg></div>
 <div class="card-info">
 <span>
-                        Erros
+                        Outras falhas
                     </span>
-<strong>
-                        3
-                    </strong>
+<strong data-log="erros">—</strong>
 <small>
                         Últimas 24 horas
                     </small>
@@ -741,35 +683,23 @@
 <label>Tipo de evento</label>
 <select id="filtroTipo">
 <option value="">Todos os eventos</option>
-<option value="login">
-                            Login
-                        </option>
-<option value="usuario">
-                            Usuário
-                        </option>
-<option value="dados">
-                            Dados
-                        </option>
-<option value="sistema">
-                            Sistema
-                        </option>
-<option value="seguranca">
-                            Segurança
-                        </option>
+<option value="Login">Login</option>
+<option value="Usuário">Usuário</option>
+<option value="Permissão">Permissão</option>
+<option value="falha">Somente falhas</option>
 </select>
 </div>
 <div class="campo">
 <label>Período</label>
 <select id="filtroPeriodo">
+<option value="todos">Todo o histórico</option>
 <option value="hoje">
                             Hoje
                         </option>
 <option value="7">
                             Últimos 7 dias
                         </option>
-<option value="30">
-                            Últimos 30 dias
-                        </option>
+<option value="30" selected>Últimos 30 dias</option>
 </select>
 </div>
 <button class="btn-filtrar" id="btnFiltrarLogs">
@@ -788,9 +718,7 @@
                         Registro das últimas ações realizadas
                     </span>
 </div>
-<strong class="total-logs">
-                    1.248 eventos
-                </strong>
+<strong class="total-logs" data-log="total">—</strong>
 </div>
 <!-- CABEÇALHO DA TABELA -->
 <div class="tabela-cabecalho">
@@ -800,188 +728,12 @@
 <span>STATUS</span>
 <span>AÇÃO</span>
 </div>
-<!-- LOG 1 -->
-<div class="log-item">
-<div class="evento">
-<div class="evento-icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
-<div>
-<strong>
-                            Novo usuário cadastrado
-                        </strong>
-<span>
-                            Usuário João Silva foi adicionado ao sistema
-                        </span>
-</div>
-</div>
-<div class="usuario-log">
-                    Administrador
-                </div>
-<div class="data-log">
-                    Hoje, 09:42
-                </div>
-<div>
-<span class="status-log sucesso">
-                        Sucesso
-                    </span>
-</div>
-<button class="btn-detalhes">
-                    Ver
-                </button>
-</div>
-<!-- LOG 2 -->
-<div class="log-item">
-<div class="evento">
-<div class="evento-icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
-<div>
-<strong>
-                            Dados atualizados
-                        </strong>
-<span>
-                            Base de dados atualizada com sucesso
-                        </span>
-</div>
-</div>
-<div class="usuario-log">
-                    Sistema
-                </div>
-<div class="data-log">
-                    Hoje, 09:25
-                </div>
-<div>
-<span class="status-log sucesso">
-                        Sucesso
-                    </span>
-</div>
-<button class="btn-detalhes">
-                    Ver
-                </button>
-</div>
-<!-- LOG 3 -->
-<div class="log-item">
-<div class="evento">
-<div class="evento-icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg></div>
-<div>
-<strong>
-                            Tentativa de acesso
-                        </strong>
-<span>
-                            Tentativa de login com credenciais inválidas
-                        </span>
-</div>
-</div>
-<div class="usuario-log">
-                    Usuário
-                </div>
-<div class="data-log">
-                    Hoje, 08:57
-                </div>
-<div>
-<span class="status-log aviso">
-                        Aviso
-                    </span>
-</div>
-<button class="btn-detalhes">
-                    Ver
-                </button>
-</div>
-<!-- LOG 4 -->
-<div class="log-item">
-<div class="evento">
-<div class="evento-icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
-<div>
-<strong>
-                            Modelo preditivo atualizado
-                        </strong>
-<span>
-                            Modelo de previsão de produtividade atualizado
-                        </span>
-</div>
-</div>
-<div class="usuario-log">
-                    Maria Alves
-                </div>
-<div class="data-log">
-                    Hoje, 08:31
-                </div>
-<div>
-<span class="status-log sucesso">
-                        Sucesso
-                    </span>
-</div>
-<button class="btn-detalhes">
-                    Ver
-                </button>
-</div>
-<!-- LOG 5 -->
-<div class="log-item">
-<div class="evento">
-<div class="evento-icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5L2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg></div>
-<div>
-<strong>
-                            Falha na sincronização
-                        </strong>
-<span>
-                            Não foi possível sincronizar uma fonte externa
-                        </span>
-</div>
-</div>
-<div class="usuario-log">
-                    Sistema
-                </div>
-<div class="data-log">
-                    Hoje, 08:12
-                </div>
-<div>
-<span class="status-log erro">
-                        Erro
-                    </span>
-</div>
-<button class="btn-detalhes">
-                    Ver
-                </button>
-</div>
-<!-- LOG 6 -->
-<div class="log-item">
-<div class="evento">
-<div class="evento-icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
-<div>
-<strong>
-                            Login realizado
-                        </strong>
-<span>
-                            Acesso ao sistema realizado com sucesso
-                        </span>
-</div>
-</div>
-<div class="usuario-log">
-                    João Silva
-                </div>
-<div class="data-log">
-                    Hoje, 07:48
-                </div>
-<div>
-<span class="status-log sucesso">
-                        Sucesso
-                    </span>
-</div>
-<button class="btn-detalhes">
-                    Ver
-                </button>
-</div>
+<div id="listaLogs"><div class="log-item"><div class="evento"><div><strong>Carregando eventos…</strong></div></div></div></div>
 </section>
 <!-- PAGINAÇÃO -->
 <div class="paginacao">
-<span>
-                Mostrando 1–6 de 1.248 eventos
-            </span>
-<div class="paginas">
-<button class="pagina-btn ativo">1</button>
-<button class="pagina-btn">2</button>
-<button class="pagina-btn">3</button>
-<button class="pagina-btn">...</button>
-<button class="pagina-btn">208</button>
-<button class="pagina-btn">›</button>
-</div>
+<span data-log="paginacao-texto"></span>
+<div class="paginas" data-log="paginas"></div>
 </div>
 <!-- FOOTER -->
 <footer>
@@ -1011,50 +763,42 @@
                     Gerencie os níveis de acesso e permissões dos usuários.
                 </p>
 </div>
-<button class="btn-nova-permissao">
-                + Nova permissão
-            </button>
+<button class="btn-nova-permissao" id="btnNovaPermissao" type="button">Editar permissões</button>
 </section>
+<p class="perm-aviso" data-perm="aviso" style="display:none"></p>
+
 <!-- CARDS -->
 <section class="cards">
 <div class="card">
 <div class="card-icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></div>
 <div class="card-info">
 <span>Perfis cadastrados</span>
-<strong>4</strong>
-<small>
-                        Perfis de acesso
-                    </small>
+<strong data-perm="c1">—</strong>
+<small data-perm="c1-sub">Carregando…</small>
 </div>
 </div>
 <div class="card">
 <div class="card-icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
 <div class="card-info">
 <span>Usuários com acesso</span>
-<strong>24</strong>
-<small>
-                        Usuários cadastrados
-                    </small>
+<strong data-perm="c2">—</strong>
+<small data-perm="c2-sub">Carregando…</small>
 </div>
 </div>
 <div class="card">
 <div class="card-icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></div>
 <div class="card-info">
 <span>Permissões ativas</span>
-<strong>18</strong>
-<small>
-                        Em funcionamento
-                    </small>
+<strong data-perm="c3">—</strong>
+<small data-perm="c3-sub">Carregando…</small>
 </div>
 </div>
 <div class="card">
 <div class="card-icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5L2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg></div>
 <div class="card-info">
 <span>Alterações recentes</span>
-<strong>5</strong>
-<small>
-                        Últimos 7 dias
-                    </small>
+<strong data-perm="c4">—</strong>
+<small data-perm="c4-sub">Carregando…</small>
 </div>
 </div>
 </section>
@@ -1067,81 +811,11 @@
                         Defina o que cada perfil pode acessar no sistema.
                     </span>
 </div>
-<span class="contador">
-                    4 perfis
-                </span>
+<span class="contador" data-perm="contador">—</span>
 </div>
-<div class="perfis-lista">
-<div class="perfil-card">
-<div class="perfil-icone produtor"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></div>
-<div class="perfil-info">
-<strong>Produtor</strong>
-<span>
-                            Acesso às informações de produção,
-                            lavouras e histórico.
-                        </span>
-</div>
-<div class="perfil-acesso">
-<b>12</b>
-<span>usuários</span>
-</div>
-<button class="btn-gerenciar">
-                        Gerenciar
-                    </button>
-</div>
-<div class="perfil-card">
-<div class="perfil-icone analista"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v3.5M15 2.5v3.5M9 18v3.5M15 18v3.5M2.5 9H6M2.5 15H6M18 9h3.5M18 15h3.5"/></svg></div>
-<div class="perfil-info">
-<strong>Analista de Dados</strong>
-<span>
-                            Acesso aos dados, modelos preditivos
-                            e previsões.
-                        </span>
-</div>
-<div class="perfil-acesso">
-<b>6</b>
-<span>usuários</span>
-</div>
-<button class="btn-gerenciar">
-                        Gerenciar
-                    </button>
-</div>
-<div class="perfil-card">
-<div class="perfil-icone administrador"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></div>
-<div class="perfil-info">
-<strong>Administrador</strong>
-<span>
-                            Acesso completo ao gerenciamento
-                            do sistema.
-                        </span>
-</div>
-<div class="perfil-acesso">
-<b>3</b>
-<span>usuários</span>
-</div>
-<button class="btn-gerenciar">
-                        Gerenciar
-                    </button>
-</div>
-<div class="perfil-card">
-<div class="perfil-icone exportador"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
-<div class="perfil-info">
-<strong>Exportador</strong>
-<span>
-                            Acesso à exportação, logística
-                            e informações de mercado.
-                        </span>
-</div>
-<div class="perfil-acesso">
-<b>3</b>
-<span>usuários</span>
-</div>
-<button class="btn-gerenciar">
-                        Gerenciar
-                    </button>
-</div>
-</div>
+<div class="perfis-lista" data-perm="perfis"></div>
 </section>
+
 <!-- MATRIZ DE PERMISSÕES -->
 <section class="painel matriz">
 <div class="painel-header">
@@ -1155,51 +829,9 @@
 <div class="tabela-container">
 <table>
 <thead>
-<tr>
-<th>Recurso</th>
-<th>Produtor</th>
-<th>Analista</th>
-<th>Administrador</th>
-<th>Exportador</th>
-</tr>
+<tr data-perm="matriz-cab"></tr>
 </thead>
-<tbody>
-<tr>
-<td>Dashboard</td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-</tr>
-<tr>
-<td>Dados</td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="bloqueado">—</span></td>
-</tr>
-<tr>
-<td>Modelos preditivos</td>
-<td><span class="bloqueado">—</span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="bloqueado">—</span></td>
-</tr>
-<tr>
-<td>Usuários</td>
-<td><span class="bloqueado">—</span></td>
-<td><span class="bloqueado">—</span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="bloqueado">—</span></td>
-</tr>
-<tr>
-<td>Exportação</td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-<td><span class="permitido"><svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></td>
-</tr>
-</tbody>
+<tbody data-perm="matriz-corpo"></tbody>
 </table>
 </div>
 </section>
@@ -1245,15 +877,11 @@
 <section class="status">
 <div class="status-icone"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
 <div class="status-texto">
-<strong>
-                    Relatórios atualizados
-                </strong>
-<span>
-                    Os dados dos relatórios foram processados recentemente.
-                </span>
+<strong data-rel="status-titulo">Carregando…</strong>
+<span data-rel="status-texto"></span>
 </div>
 <small>
-                Atualizado <span data-ts="sync">há 15 segundos</span>
+                Atualizado <span data-rel="atualizado">—</span>
             </small>
 </section>
 <!-- CARDS -->
@@ -1264,9 +892,7 @@
 <span>
                         Relatórios gerados
                     </span>
-<strong>
-                        48
-                    </strong>
+<strong data-rel="gerados">—</strong>
 <small>
                         Este mês
                     </small>
@@ -1276,14 +902,10 @@
 <div class="card-icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
 <div class="card-info">
 <span>
-                        Dados analisados
+                        Eventos analisados
                     </span>
-<strong>
-                        18.452
-                    </strong>
-<small>
-                        Últimas 24 horas
-                    </small>
+<strong data-rel="analisados">—</strong>
+<small data-rel="analisados-sub">—</small>
 </div>
 </div>
 <div class="card">
@@ -1292,26 +914,18 @@
 <span>
                         Usuários ativos
                     </span>
-<strong>
-                        21
-                    </strong>
-<small>
-                        87,5% do total
-                    </small>
+<strong data-rel="ativos">—</strong>
+<small data-rel="ativos-sub">—</small>
 </div>
 </div>
 <div class="card">
 <div class="card-icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5L2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg></div>
 <div class="card-info">
 <span>
-                        Alertas registrados
+                        Alertas (falhas)
                     </span>
-<strong>
-                        12
-                    </strong>
-<small>
-                        Requerem análise
-                    </small>
+<strong data-rel="alertas">—</strong>
+<small data-rel="alertas-sub">—</small>
 </div>
 </div>
 </section>
@@ -1333,18 +947,10 @@
                         Período
                     </label>
 <select id="periodo">
-<option>
-                            Últimos 7 dias
-                        </option>
-<option selected="">
-                            Últimos 30 dias
-                        </option>
-<option>
-                            Últimos 6 meses
-                        </option>
-<option>
-                            Último ano
-                        </option>
+<option value="7">Últimos 7 dias</option>
+<option value="30" selected>Últimos 30 dias</option>
+<option value="180">Últimos 6 meses</option>
+<option value="365">Último ano</option>
 </select>
 </div>
 <div class="campo">
@@ -1352,24 +958,13 @@
                         Tipo de relatório
                     </label>
 <select id="tipoRelatorio">
-<option>
-                            Todos os relatórios
-                        </option>
-<option>
-                            Usuários
-                        </option>
-<option>
-                            Dados
-                        </option>
-<option>
-                            Logs
-                        </option>
-<option>
-                            Sistema
-                        </option>
-<option>
-                            Alertas
-                        </option>
+<option value="todos">Todos os relatórios</option>
+<option value="usuarios">Usuários</option>
+<option value="dados">Dados</option>
+<option value="atividades">Atividades (logs)</option>
+<option value="sistema">Sistema</option>
+<option value="alertas">Alertas</option>
+<option value="geral">Geral</option>
 </select>
 </div>
 <div class="campo">
@@ -1377,15 +972,9 @@
                         Formato
                     </label>
 <select id="formato">
-<option>
-                            PDF
-                        </option>
-<option>
-                            Excel
-                        </option>
-<option>
-                            CSV
-                        </option>
+<option value="pdf">PDF (imprimir)</option>
+<option value="xls">Excel</option>
+<option value="csv">CSV</option>
 </select>
 </div>
 <button class="btn-filtrar" id="btnFiltrarRelatorios">
@@ -1404,13 +993,11 @@
                         Informações consolidadas do sistema Safra
                     </span>
 </div>
-<strong class="total">
-                    6 relatórios
-                </strong>
+<strong class="total" data-rel="total-cards">6 relatórios</strong>
 </div>
 <div class="relatorios-grid">
 <!-- RELATÓRIO 1 -->
-<div class="relatorio-card">
+<div class="relatorio-card" data-rel-card="usuarios">
 <div class="relatorio-topo">
 <div class="relatorio-icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18.5 14.2a6.5 6.5 0 0 1 3 5.8"/></svg></div>
 <span class="status-disponivel">
@@ -1424,20 +1011,13 @@
                         Consulte usuários cadastrados,
                         perfis, acessos e status das contas.
                     </p>
-<div class="relatorio-info">
-<span>
-                            Atualizado hoje
-                        </span>
-<strong>
-                            24 usuários
-                        </strong>
-</div>
-<button class="btn-ver">
+<div class="relatorio-info"><span>Carregando…</span><strong data-rel="info-usuarios">—</strong></div>
+<button class="btn-ver" data-rel-ver="usuarios">
                         Ver relatório
                     </button>
 </div>
 <!-- RELATÓRIO 2 -->
-<div class="relatorio-card">
+<div class="relatorio-card" data-rel-card="dados">
 <div class="relatorio-topo">
 <div class="relatorio-icone azul"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v3.5M15 2.5v3.5M9 18v3.5M15 18v3.5M2.5 9H6M2.5 15H6M18 9h3.5M18 15h3.5"/></svg></div>
 <span class="status-disponivel">
@@ -1451,20 +1031,13 @@
                         Acompanhe qualidade, processamento
                         e atualização das fontes de dados.
                     </p>
-<div class="relatorio-info">
-<span>
-                            Atualizado há 15 min
-                        </span>
-<strong>
-                            18.452 registros
-                        </strong>
-</div>
-<button class="btn-ver">
+<div class="relatorio-info"><span>Carregando…</span><strong data-rel="info-dados">—</strong></div>
+<button class="btn-ver" data-rel-ver="dados">
                         Ver relatório
                     </button>
 </div>
 <!-- RELATÓRIO 3 -->
-<div class="relatorio-card">
+<div class="relatorio-card" data-rel-card="atividades">
 <div class="relatorio-topo">
 <div class="relatorio-icone amarelo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6v.01M3.5 12v.01M3.5 18v.01"/></svg></div>
 <span class="status-disponivel">
@@ -1478,20 +1051,13 @@
                         Visualize os eventos, acessos e
                         principais atividades realizadas.
                     </p>
-<div class="relatorio-info">
-<span>
-                            Atualizado hoje
-                        </span>
-<strong>
-                            1.248 eventos
-                        </strong>
-</div>
-<button class="btn-ver">
+<div class="relatorio-info"><span>Carregando…</span><strong data-rel="info-atividades">—</strong></div>
+<button class="btn-ver" data-rel-ver="atividades">
                         Ver relatório
                     </button>
 </div>
 <!-- RELATÓRIO 4 -->
-<div class="relatorio-card">
+<div class="relatorio-card" data-rel-card="sistema">
 <div class="relatorio-topo">
 <div class="relatorio-icone roxo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></div>
 <span class="status-disponivel">
@@ -1505,23 +1071,16 @@
                         Acompanhe desempenho, disponibilidade
                         e funcionamento dos serviços.
                     </p>
-<div class="relatorio-info">
-<span>
-                            Atualizado há 5 min
-                        </span>
-<strong>
-                            99,9% online
-                        </strong>
-</div>
-<button class="btn-ver">
+<div class="relatorio-info"><span>Carregando…</span><strong data-rel="info-sistema">—</strong></div>
+<button class="btn-ver" data-rel-ver="sistema">
                         Ver relatório
                     </button>
 </div>
 <!-- RELATÓRIO 5 -->
-<div class="relatorio-card">
+<div class="relatorio-card" data-rel-card="alertas">
 <div class="relatorio-topo">
 <div class="relatorio-icone vermelho"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5L2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg></div>
-<span class="status-atencao">
+<span class="status-atencao" data-rel="selo-alertas">
                             Atenção
                         </span>
 </div>
@@ -1532,20 +1091,13 @@
                         Consulte alertas, ocorrências e
                         situações que precisam de atenção.
                     </p>
-<div class="relatorio-info">
-<span>
-                            Atualizado hoje
-                        </span>
-<strong>
-                            12 alertas
-                        </strong>
-</div>
-<button class="btn-ver">
+<div class="relatorio-info"><span>Carregando…</span><strong data-rel="info-alertas">—</strong></div>
+<button class="btn-ver" data-rel-ver="alertas">
                         Ver relatório
                     </button>
 </div>
 <!-- RELATÓRIO 6 -->
-<div class="relatorio-card">
+<div class="relatorio-card" data-rel-card="geral">
 <div class="relatorio-topo">
 <div class="relatorio-icone verde"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>
 <span class="status-disponivel">
@@ -1559,15 +1111,8 @@
                         Visão consolidada dos principais
                         indicadores do sistema Safra.
                     </p>
-<div class="relatorio-info">
-<span>
-                            Atualizado hoje
-                        </span>
-<strong>
-                            Dados completos
-                        </strong>
-</div>
-<button class="btn-ver">
+<div class="relatorio-info"><span>Carregando…</span><strong data-rel="info-geral">—</strong></div>
+<button class="btn-ver" data-rel-ver="geral">
                         Ver relatório
                     </button>
 </div>
@@ -1581,9 +1126,7 @@
 <h2>
                             Resumo do sistema
                         </h2>
-<span>
-                            Últimos 30 dias
-                        </span>
+<span data-rel="resumo-periodo">Últimos 30 dias</span>
 </div>
 </div>
 <div class="resumo-lista">
@@ -1594,20 +1137,16 @@
                             Usuários cadastrados
 
                         </div>
-<strong>
-                            24
-                        </strong>
+<strong data-rel="r-usuarios">—</strong>
 </div>
 <div class="resumo-item">
 <div class="resumo-label">
 <span class="bolinha azul-bg"></span>
 
-                            Dados processados
+                            Dispositivos cadastrados
 
                         </div>
-<strong>
-                            18.452
-                        </strong>
+<strong data-rel="r-dispositivos">—</strong>
 </div>
 <div class="resumo-item">
 <div class="resumo-label">
@@ -1616,9 +1155,7 @@
                             Eventos registrados
 
                         </div>
-<strong>
-                            1.248
-                        </strong>
+<strong data-rel="r-eventos">—</strong>
 </div>
 <div class="resumo-item">
 <div class="resumo-label">
@@ -1627,9 +1164,7 @@
                             Alertas
 
                         </div>
-<strong>
-                            12
-                        </strong>
+<strong data-rel="r-alertas">—</strong>
 </div>
 </div>
 </div>
@@ -1644,58 +1179,9 @@
                             Últimos arquivos gerados
                         </span>
 </div>
-<a href="#">
-                        Ver todos
-                    </a>
+
 </div>
-<div class="relatorio-recente">
-<div class="mini-icone verde">
-                        PDF
-                    </div>
-<div>
-<strong>
-                            Relatório geral do sistema
-                        </strong>
-<span>
-                            Gerado hoje, 09:42
-                        </span>
-</div>
-<button>
-                        ↓
-                    </button>
-</div>
-<div class="relatorio-recente">
-<div class="mini-icone azul">
-                        PDF
-                    </div>
-<div>
-<strong>
-                            Relatório de dados
-                        </strong>
-<span>
-                            Gerado ontem, 16:30
-                        </span>
-</div>
-<button>
-                        ↓
-                    </button>
-</div>
-<div class="relatorio-recente">
-<div class="mini-icone amarelo">
-                        XLS
-                    </div>
-<div>
-<strong>
-                            Relatório de usuários
-                        </strong>
-<span>
-                            Gerado ontem, 11:18
-                        </span>
-</div>
-<button>
-                        ↓
-                    </button>
-</div>
+<div id="relRecentes"><div class="relatorio-recente"><div><span>Carregando…</span></div></div></div>
 </div>
 </section>
 <!-- FOOTER -->
@@ -2047,6 +1533,7 @@
 
 </section>
 <script src="../comum.js"></script>
+<script src="../sino.js"></script>
 <script src="adm.js"></script>
 <script src="../configuracoes.js"></script>
 <script src="../thingspeak.js"></script>

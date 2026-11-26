@@ -410,6 +410,13 @@ Safra.revelar = function (pagina) {
     }
 
     function mostrarPagina(id, alterarHash = true) {
+        // Perfil sem permissão para esta tela: abre a primeira que ele pode ver.
+        if (!paginaPermitida(id)) {
+            const alternativa = primeiraPaginaPermitida();
+            if (!alternativa) return;
+            id = alternativa;
+        }
+
         const paginas = Array.from(document.querySelectorAll(".safra-page"));
         if (!paginas.length) return;
 
@@ -482,17 +489,95 @@ Safra.revelar = function (pagina) {
         const idPadrao = document.body.dataset.paginaPadrao;
         const paginaPadrao = idPadrao && document.getElementById(idPadrao);
 
+        // Se a página define uma tela padrão (data-pagina-padrao), ela sempre abre
+        // nessa tela ao entrar ou recarregar (F5), ignorando o #hash da URL.
+        const padraoValido = paginaPadrao && paginaPadrao.classList.contains("safra-page");
+        if (padraoValido) {
+            mostrarPagina(paginaPadrao.id, true);
+            return;
+        }
+
         mostrarPagina(
             inicial && inicial.classList.contains("safra-page")
                 ? inicial.id
-                : (paginaPadrao && paginaPadrao.classList.contains("safra-page") ? paginaPadrao.id : paginas[0].id),
+                : paginas[0].id,
             false
         );
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", iniciarNavegacao);
-    } else {
+    /* ================= PERMISSÕES POR PERFIL =================
+       A matriz fica no banco (Administrador > Permissões). Aqui o menu e as telas bloqueadas
+       para o perfil de quem está logado são escondidos. Se o servidor não responder,
+       nada é bloqueado (o login e as APIs continuam checando o perfil). */
+    const PAGINA_RECURSO = {
+        "adm.inicial": "dashboard", "analista.inicial": "dashboard", "telainicial": "dashboard",
+        "adm.usuarios": "usuarios", "adm.permissoes": "permissoes", "adm.logs": "logs",
+        "adm.dados": "dados", "analista.dados": "dados",
+        "adm.relatorios": "relatorios", "analista.relatorios": "relatorios", "relatorio": "relatorios",
+        "adm.alertas": "alertas", "analista.alertas": "alertas", "alertas": "alertas",
+        "analista.modelos": "modelos", "analista.previsoes": "modelos",
+        "lavoura": "lavouras", "financeiro": "financeiro", "exportacao": "exportacao"
+    };
+    const API_NODE = (window.SAFRA_API_NODE || "http://localhost:3001").replace(/\/$/, "");
+
+    function lerCachePermissoes() {
+        try {
+            const c = JSON.parse(sessionStorage.getItem("safra_permissoes") || "null");
+            if (c && c.token && c.token === sessionStorage.getItem("safra_token")) return c.recursos || null;
+        } catch (e) { /* sem cache */ }
+        return null;
+    }
+
+    let recursosPermitidos = lerCachePermissoes();
+
+    function paginaPermitida(id) {
+        const recurso = PAGINA_RECURSO[id];
+        return !recursosPermitidos || !recurso || recursosPermitidos[recurso] !== false;
+    }
+
+    function primeiraPaginaPermitida() {
+        const ids = Array.from(document.querySelectorAll(".safra-page")).map(p => p.id);
+        const padrao = document.body.dataset.paginaPadrao;
+        if (padrao) ids.unshift(padrao);
+        return ids.find(paginaPermitida) || null;
+    }
+
+    function aplicarPermissoesNoMenu() {
+        document.querySelectorAll(".menu-item").forEach(item => {
+            const id = normalizarId(item.getAttribute("href"));
+            if (id) item.style.display = paginaPermitida(id) ? "" : "none";
+        });
+    }
+
+    async function carregarPermissoes() {
+        const token = sessionStorage.getItem("safra_token");
+        if (!token) return;
+        try {
+            const resp = await fetch(API_NODE + "/permissoes/minhas", { headers: { Authorization: "Bearer " + token } });
+            if (!resp.ok) return;
+            const d = await resp.json();
+            recursosPermitidos = d && d.recursos ? d.recursos : null;
+            try { sessionStorage.setItem("safra_permissoes", JSON.stringify({ token: token, recursos: recursosPermitidos })); } catch (e) { /* ok */ }
+            aplicarPermissoesNoMenu();
+            const ativa = document.querySelector(".safra-page.pagina-ativa");
+            if (ativa && !paginaPermitida(ativa.id)) {
+                const alternativa = primeiraPaginaPermitida();
+                if (alternativa) mostrarPagina(alternativa, true);
+            }
+        } catch (e) { /* servidor fora do ar: não bloqueia nada */ }
+    }
+
+    window.Safra.recarregarPermissoes = carregarPermissoes;
+
+    function iniciarTudo() {
         iniciarNavegacao();
+        aplicarPermissoesNoMenu();
+        carregarPermissoes();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", iniciarTudo);
+    } else {
+        iniciarTudo();
     }
 })();

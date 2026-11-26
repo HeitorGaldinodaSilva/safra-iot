@@ -7,7 +7,7 @@ import httpx
 
 from ..clients import clima, thingspeak
 from ..config import Settings
-from . import alertas, qualidade, tratamento
+from . import alertas_analista as alertas, qualidade, tratamento
 
 RECIFE = ZoneInfo("America/Recife")
 

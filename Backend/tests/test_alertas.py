@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from app.config import get_settings
-from app.services import alertas
+from app.services import alertas_analista as alertas
 
 AGORA = datetime(2026, 11, 13, 15, tzinfo=timezone.utc)
 BASE = dict(cfg=get_settings(), agora=AGORA, thingspeak_erro=None, clima_erro=None,

@@ -3313,3 +3313,158 @@ footer {
 .safra-page [class*="icon"] {
     flex-shrink: 0;
 }
+
+
+/* =====================================================================
+   ALERTAS (ADM): lista no mesmo modelo do Analista
+   ícone + título/mensagem/data • categoria + selo + botões (Ver detalhes, Lido, ×)
+===================================================================== */
+#adm\.alertas .alerta-item {
+    min-height: 63px;
+    padding: 12px 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-bottom: 1px solid #eeeeea;
+    transition: opacity .2s ease, transform .26s ease;
+}
+
+#adm\.alertas .alerta-item:last-child { border-bottom: none; }
+#adm\.alertas .alerta-item.lido { opacity: .55; }
+#adm\.alertas .alerta-item.saindo { opacity: 0; transform: translateX(16px); }
+
+#adm\.alertas .alerta-icon {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+}
+
+#adm\.alertas .alerta-icon .ico { width: 18px; height: 18px; }
+#adm\.alertas .alerta-icon.amarelo { background: #fae9b8; color: #a87516; }
+#adm\.alertas .alerta-icon.vermelho { background: #f5d9d5; color: #b44a40; }
+#adm\.alertas .alerta-icon.azul { background: #dcecf5; color: #397498; }
+
+#adm\.alertas .alerta-texto { flex: 1; min-width: 180px; }
+#adm\.alertas .alerta-texto strong { display: block; color: #31584d; font-size: var(--fs-xs); }
+#adm\.alertas .alerta-texto span { display: block; margin-top: 4px; color: #84908b; font-size: var(--fs-xs); }
+#adm\.alertas .alerta-texto small { display: block; margin-top: 5px; color: #9aa39f; font-size: var(--fs-xs); }
+
+#adm\.alertas .status-alerta {
+    padding: 6px 9px;
+    border-radius: 20px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+#adm\.alertas .status-alerta.urgente { background: #f8dcd8; color: #b23b2e; }
+#adm\.alertas .status-alerta.atencao { background: #fff1d3; color: #b78327; }
+#adm\.alertas .status-alerta.informativo { background: #dcecf4; color: #397f9f; }
+
+#adm\.alertas .alerta-acoes {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+#adm\.alertas .alerta-mini {
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid #dce1da;
+    border-radius: 8px;
+    background: #fff;
+    color: #356255;
+    font-family: var(--fonte-texto);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+#adm\.alertas .alerta-mini:hover { background: #e1f1dc; border-color: #218149; color: #1d6b3c; }
+#adm\.alertas .alerta-mini.perigo { width: 30px; padding: 0; font-size: 18px; line-height: 1; color: #b23b2e; border-color: #efc9c4; }
+#adm\.alertas .alerta-mini.perigo:hover { background: #c9483a; border-color: #c9483a; color: #fff; }
+
+#adm\.alertas .alerta-vazio {
+    padding: 28px;
+    text-align: center;
+    color: #5f6d68;
+    font-size: var(--fs-sm);
+}
+
+@media (max-width: 700px) {
+    #adm\.alertas .alerta-acoes { margin-left: 0; justify-content: flex-start; width: 100%; }
+}
+
+
+/* =====================================================================
+   PERMISSÕES (ADM): aviso, matriz e janela de edição
+===================================================================== */
+.perm-aviso {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(227, 181, 69, .18);
+    border: 1px solid rgba(227, 181, 69, .5);
+    color: #5b4a12;
+    font-size: var(--fs-sm);
+}
+
+.perm-bloq {
+    color: #b44a40;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+}
+
+.perm-modal { max-width: 460px; }
+
+.perm-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.perm-modal .perm-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid #e6eae3;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.perm-modal .perm-linha:hover { background: #f5f8f3; }
+
+.perm-modal .perm-linha input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    flex: 0 0 18px;
+    display: inline-block;
+    accent-color: #218149;
+}
+
+.perm-modal .perm-linha small {
+    margin-left: auto;
+    color: #8c9692;
+    font-size: var(--fs-xs);
+    font-weight: 400;
+}
+
+.perm-modal .perm-escolha {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+}

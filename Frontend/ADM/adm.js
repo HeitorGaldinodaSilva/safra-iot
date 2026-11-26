@@ -1,4 +1,3 @@
-
 const mostrarMensagem = Safra.avisar;
 
 
@@ -38,6 +37,7 @@ function icone(nome, classe) {
 (() => {
     const BASE = (window.SAFRA_API_ADM || window.SAFRA_API_ANALISTA || "http://localhost:8000").replace(/\/$/, "");
     const CHAVE_LIDOS = "safra_adm_alertas_lidos";
+    const CHAVE_DISPENSADOS = "safra_adm_alertas_dispensados";
     const INTERVALO_MS = 60000;
     const raiz = () => document.getElementById("adm.alertas");
     const q = (sel) => { const r = raiz(); return r ? r.querySelector(sel) : null; };
@@ -50,7 +50,7 @@ function icone(nome, classe) {
         atencao: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>',
         informativo: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/>'
     };
-    let alertas = [], carregando = false, ultimaCarga = 0, erroCarga = null;
+    let alertas = [], carregando = false, ultimaCarga = 0, erroCarga = null, ultimoD = null;
 
     /* ---------- lido / não lido (neste navegador) ---------- */
     function lerLidos() {
@@ -60,6 +60,27 @@ function icone(nome, classe) {
         // guarda só os que ainda existem, para a lista não crescer para sempre
         const ativos = new Set(alertas.map(a => a.id));
         try { localStorage.setItem(CHAVE_LIDOS, JSON.stringify([...conjunto].filter(id => ativos.has(id)))); } catch (e) { /* sem armazenamento */ }
+    }
+
+    /* ---------- dispensados (botão ×, neste navegador) ---------- */
+    function lerDispensados() {
+        try { return new Set(JSON.parse(localStorage.getItem(CHAVE_DISPENSADOS) || "[]")); } catch (e) { return new Set(); }
+    }
+    function salvarDispensados(conjunto) {
+        const ativos = new Set(alertas.map(a => a.id));
+        try { localStorage.setItem(CHAVE_DISPENSADOS, JSON.stringify([...conjunto].filter(id => ativos.has(id)))); } catch (e) { /* sem armazenamento */ }
+    }
+    // alertas que o administrador ainda não dispensou
+    // (e que o tipo de aviso esteja ligado em Configurações > Notificações)
+    const PREF_CATEGORIA = { "Segurança": "notif_producao", "Clima": "notif_clima", "Dados": "notif_exportacao", "Usuários": "notif_relatorios" };
+    function visiveis() {
+        const ds = lerDispensados();
+        return alertas.filter(a => !ds.has(a.id) && (!window.Safra || !Safra.sino || Safra.sino.ligada(PREF_CATEGORIA[a.categoria])));
+    }
+    function redesenhar() {
+        if (ultimoD) desenharResumo(ultimoD);
+        desenharLista();
+        atualizarSelo();
     }
 
     function criar(tag, classe, texto) {
@@ -74,18 +95,31 @@ function icone(nome, classe) {
         const hora = `${dois(d.getHours())}:${dois(d.getMinutes())}`;
         const dia = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
         const dif = Math.round((dia(hoje) - dia(d)) / 86400000);
-        if (dif === 0) return `Hoje, ${hora}`;
-        if (dif === 1) return `Ontem, ${hora}`;
-        return `${dois(d.getDate())}/${dois(d.getMonth() + 1)}/${d.getFullYear()}, ${hora}`;
+        if (dif === 0) return `Hoje às ${hora}`;
+        if (dif === 1) return `Ontem às ${hora}`;
+        return `${dois(d.getDate())}/${dois(d.getMonth() + 1)}/${d.getFullYear()} às ${hora}`;
     }
 
     /* ---------- selo do menu lateral (todas as abas do ADM) ---------- */
     function atualizarSelo() {
         const lidos = lerLidos();
-        const naoLidos = alertas.filter(a => !lidos.has(a.id)).length;
+        const naoLidos = visiveis().filter(a => !lidos.has(a.id)).length;
         document.querySelectorAll(".alerta-menu .badge").forEach(b => {
             b.textContent = naoLidos > 99 ? "99+" : String(naoLidos);
             b.style.display = naoLidos ? "" : "none";
+        });
+        atualizarSino(naoLidos);
+    }
+
+    /* ---------- sino da barra do topo (sino.js) ---------- */
+    function atualizarSino(naoLidos) {
+        if (!window.Safra || !Safra.sino) return;
+        const lidos = lerLidos();
+        Safra.sino.atualizar({
+            itens: visiveis().map(a => ({ id: a.id, titulo: a.titulo, mensagem: a.mensagem, prioridade: a.prioridade, categoria: a.categoria, quando: a.quando, lido: lidos.has(a.id) })),
+            naoLidos, destino: "#adm.alertas", erro: erroCarga,
+            aoLer: (id) => { const l = lerLidos(); l.add(id); salvarLidos(l); redesenhar(); },
+            aoLerTodos: () => { const l = lerLidos(); visiveis().forEach(a => l.add(a.id)); salvarLidos(l); redesenhar(); }
         });
     }
 
@@ -94,8 +128,7 @@ function icone(nome, classe) {
         const lidos = lerLidos();
         lidos.add(a.id);
         salvarLidos(lidos);
-        atualizarSelo();
-        desenharLista();
+        redesenhar();
 
         const fundo = criar("div", "safra-modal-fundo"), caixa = criar("div", "safra-modal");
         const focoAnterior = document.activeElement;
@@ -130,7 +163,7 @@ function icone(nome, classe) {
         function teclado(e) { if (e.key === "Escape") sair(); }
         naoLido.addEventListener("click", () => {
             const l = lerLidos(); l.delete(a.id); salvarLidos(l);
-            atualizarSelo(); desenharLista(); sair();
+            redesenhar(); sair();
         });
         fechar.addEventListener("click", sair);
         fundo.addEventListener("mousedown", (e) => { if (e.target === fundo) sair(); });
@@ -144,7 +177,7 @@ function icone(nome, classe) {
         const texto = semAcento((q("#buscaAlerta") || {}).value);
         const prio = semAcento((q("#prioridade") || {}).selectedOptions ? q("#prioridade").selectedOptions[0].textContent : "");
         const stat = semAcento((q("#status") || {}).selectedOptions ? q("#status").selectedOptions[0].textContent : "");
-        return alertas.filter(a =>
+        return visiveis().filter(a =>
             (!texto || semAcento(a.titulo).includes(texto) || semAcento(a.mensagem).includes(texto) || semAcento(a.categoria).includes(texto)) &&
             (prio.startsWith("todas") || !prio || semAcento(ROTULO[a.prioridade]) === prio) &&
             (stat.startsWith("todos") || !stat || (stat === "lido" ? lidos.has(a.id) : !lidos.has(a.id))));
@@ -157,41 +190,60 @@ function icone(nome, classe) {
         caixa.replaceChildren();
         txt("total", `${lista.length} ${lista.length === 1 ? "alerta" : "alertas"}`);
         if (!lista.length) {
-            const vazio = criar("p", "", erroCarga || (alertas.length ? "Nenhum alerta encontrado com esses filtros." : "Nenhum alerta ativo. Tudo certo por aqui!"));
-            vazio.style.cssText = `padding:28px;text-align:center;color:${erroCarga ? "#c0392b" : "#5f6d68"}`;
+            const vazio = criar("p", "alerta-vazio", erroCarga || (visiveis().length ? "Nenhum alerta encontrado com esses filtros." : "Nenhum alerta ativo. Tudo certo por aqui!"));
+            if (erroCarga) vazio.style.color = "#c0392b";
             caixa.appendChild(vazio);
             return;
         }
         lista.forEach(a => {
-            const item = criar("div", `alerta-item ${a.prioridade}`);
-            if (lidos.has(a.id)) item.style.opacity = ".62";
-            const ic = criar("div", `alerta-icone ${COR[a.prioridade]}`);
+            const lido = lidos.has(a.id);
+            const item = criar("div", `alerta-item ${a.prioridade}${lido ? " lido" : ""}`);
+            const ic = criar("div", `alerta-icon ${COR[a.prioridade]}`);
             ic.innerHTML = `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SVG[a.prioridade]}</svg>`;
-            const cont = criar("div", "alerta-conteudo"), topo = criar("div", "alerta-titulo");
             // textContent: o conteúdo vem de fontes externas e nunca deve virar HTML
-            topo.append(criar("strong", "", a.titulo), criar("span", `tag ${a.prioridade}-tag`, ROTULO[a.prioridade]));
-            cont.append(topo, criar("p", "", a.mensagem), criar("small", "", `${a.categoria} • ${quando(a.quando)}${lidos.has(a.id) ? " • Lido" : ""}`));
-            const btn = criar("button", "btn-alerta", "Ver detalhes");
-            btn.type = "button";
-            btn.addEventListener("click", () => abrirDetalhes(a));
-            item.append(ic, cont, btn);
+            const texto = criar("div", "alerta-texto");
+            texto.append(criar("strong", "", a.titulo), criar("span", "", a.mensagem), criar("small", "", `${quando(a.quando)} • ${a.categoria}`));
+            const status = criar("span", `status-alerta ${a.prioridade}`, ROTULO[a.prioridade]);
+            const acoes = criar("span", "alerta-acoes");
+            const bDet = criar("button", "alerta-mini", "Ver detalhes");
+            bDet.type = "button"; bDet.title = "Ver detalhes";
+            bDet.addEventListener("click", () => abrirDetalhes(a));
+            const bLido = criar("button", "alerta-mini", lido ? "Não lido" : "Lido");
+            bLido.type = "button"; bLido.title = lido ? "Marcar como não lido" : "Marcar como lido";
+            bLido.addEventListener("click", () => {
+                const l = lerLidos();
+                if (lido) l.delete(a.id); else l.add(a.id);
+                salvarLidos(l);
+                redesenhar();
+            });
+            const bX = criar("button", "alerta-mini perigo", "×");
+            bX.type = "button"; bX.title = "Dispensar alerta"; bX.setAttribute("aria-label", "Dispensar alerta");
+            bX.addEventListener("click", () => {
+                item.classList.add("saindo");
+                setTimeout(() => { const ds = lerDispensados(); ds.add(a.id); salvarDispensados(ds); redesenhar(); }, 260);
+            });
+            acoes.append(bDet, bLido, bX);
+            item.append(ic, texto, status, acoes);
             caixa.appendChild(item);
         });
     }
 
     function desenharResumo(d) {
-        const lidos = lerLidos(), naoLidos = (p) => alertas.filter(a => a.prioridade === p && !lidos.has(a.id)).length;
-        txt("urgentes", d.cards.urgentes);
-        txt("atencao", d.cards.atencao);
-        txt("informativos", d.cards.informativos);
-        txt("total-card", d.cards.total);
-        txt("urgentes-sub", d.cards.urgentes ? `${naoLidos("urgente")} não lido(s) · atenção imediata` : "Nenhum urgente");
-        txt("atencao-sub", d.cards.atencao ? `${naoLidos("atencao")} não lido(s) · precisam de análise` : "Nada a analisar");
-        txt("informativos-sub", d.cards.informativos ? `${naoLidos("informativo")} não lido(s)` : "Sem novidades");
-        txt("total-sub", `${alertas.filter(a => !lidos.has(a.id)).length} não lido(s)`);
-        const grave = d.cards.urgentes + d.cards.atencao;
-        txt("status-titulo", d.cards.urgentes ? "Existem alertas urgentes" : grave ? "Existem alertas que requerem atenção" : "Nenhum alerta que exija atenção");
-        txt("status-texto", d.cards.total ? `${d.cards.total} alerta(s) ativo(s) neste momento.` : "O sistema está funcionando normalmente.");
+        const vis = visiveis(), lidos = lerLidos();
+        const tot = (p) => vis.filter(a => a.prioridade === p).length;
+        const naoLidos = (p) => vis.filter(a => a.prioridade === p && !lidos.has(a.id)).length;
+        const urgentes = tot("urgente"), atencao = tot("atencao"), informativos = tot("informativo"), total = vis.length;
+        txt("urgentes", urgentes);
+        txt("atencao", atencao);
+        txt("informativos", informativos);
+        txt("total-card", total);
+        txt("urgentes-sub", urgentes ? `${naoLidos("urgente")} não lido(s) · atenção imediata` : "Nenhum urgente");
+        txt("atencao-sub", atencao ? `${naoLidos("atencao")} não lido(s) · precisam de análise` : "Nada a analisar");
+        txt("informativos-sub", informativos ? `${naoLidos("informativo")} não lido(s)` : "Sem novidades");
+        txt("total-sub", `${vis.filter(a => !lidos.has(a.id)).length} não lido(s)`);
+        const grave = urgentes + atencao;
+        txt("status-titulo", urgentes ? "Existem alertas urgentes" : grave ? "Existem alertas que requerem atenção" : "Nenhum alerta que exija atenção");
+        txt("status-texto", total ? `${total} alerta(s) ativo(s) neste momento.` : "O sistema está funcionando normalmente.");
         const h = new Date(d.atualizado_em), dois = (n) => String(n).padStart(2, "0");
         txt("atualizado", `às ${dois(h.getHours())}:${dois(h.getMinutes())}`);
     }
@@ -207,13 +259,13 @@ function icone(nome, classe) {
             if (!resp.ok) throw new Error(`A API respondeu ${resp.status}.`);
             const d = await resp.json();
             alertas = d.alertas;
+            ultimoD = d;
             erroCarga = null;
             ultimaCarga = Date.now();
             const lidos = lerLidos();
             salvarLidos(lidos);
-            desenharResumo(d);
-            desenharLista();
-            atualizarSelo();
+            salvarDispensados(lerDispensados());
+            redesenhar();
             if (manual && window.Safra) Safra.avisar("Alertas atualizados!");
         } catch (e) {
             const fora = e instanceof TypeError;
@@ -227,6 +279,7 @@ function icone(nome, classe) {
     document.addEventListener("DOMContentLoaded", () => {
         const r = raiz();
         if (!r) return;
+        window.addEventListener("safra:preferencias", () => redesenhar());
         carregar(false);
         // roda em qualquer aba do ADM, para o selo do menu ficar sempre em dia
         setInterval(() => { if (!document.hidden) carregar(false); }, INTERVALO_MS);
@@ -237,10 +290,9 @@ function icone(nome, classe) {
         const todos = q("#btnMarcarTodos");
         if (todos) todos.addEventListener("click", () => {
             const l = lerLidos();
-            alertas.forEach(a => l.add(a.id));
+            visiveis().forEach(a => l.add(a.id));
             salvarLidos(l);
-            atualizarSelo();
-            desenharLista();
+            redesenhar();
             if (window.Safra) Safra.avisar("Todos os alertas foram marcados como lidos.");
         });
         new MutationObserver(() => { if (r.classList.contains("pagina-ativa") && Date.now() - ultimaCarga > 5000) carregar(false); })
@@ -535,1675 +587,592 @@ function icone(nome, classe) {
 })();   // fim de adm.inicial.js
 
 /* ================= adm.logs.js ================= */
+/* Administrador > Logs do sistema com dados reais (Node: GET /logs, lê a tabela log_sistema).
+   Para trocar o endereço do Node: window.SAFRA_API_NODE = "https://..." antes do adm.js */
 (() => {
-    // ==========================================
-    // SAFRA - ADMINISTRADOR
-    // SISTEMA LOG
-    // ==========================================
+    const NODE = (window.SAFRA_API_NODE || "http://localhost:3001").replace(/\/$/, "");
+    const raiz = () => document.getElementById("adm.logs");
+    const q = (sel) => { const r = raiz(); return r ? r.querySelector(sel) : null; };
+    const txt = (chave, v) => { const el = q(`[data-log="${chave}"]`); if (el) el.textContent = v; };
+    const fmt = (n) => Number(n || 0).toLocaleString("pt-BR");
+    const ICO = {
+        ok: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+        aviso: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>',
+        erro: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5L2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>'
+    };
+    const POR_PAGINA = 10;
+    let pagina = 1, total = 0, ultimos = [], carregando = false, timer = null;
 
-    // ==========================================
-    // DADOS DOS LOGS
-    // ==========================================
-
-    let logs = [
-
-        {
-            id: 1,
-            usuario: "Administrador",
-            acao: "Login realizado",
-            tipo: "Login",
-            descricao: "Usuário administrador realizou login no sistema.",
-            data: "16/09/2026",
-            hora: "08:42",
-            status: "Sucesso"
-        },
-
-        {
-            id: 2,
-            usuario: "Maria Alves",
-            acao: "Atualização de dados",
-            tipo: "Dados",
-            descricao: "Dados da produção foram atualizados.",
-            data: "16/09/2026",
-            hora: "09:15",
-            status: "Sucesso"
-        },
-
-        {
-            id: 3,
-            usuario: "Administrador",
-            acao: "Alteração de permissão",
-            tipo: "Permissão",
-            descricao: "Permissão do perfil Analista de Dados foi alterada.",
-            data: "16/09/2026",
-            hora: "09:37",
-            status: "Sucesso"
-        },
-
-        {
-            id: 4,
-            usuario: "João Silva",
-            acao: "Login realizado",
-            tipo: "Login",
-            descricao: "Produtor realizou login no sistema.",
-            data: "16/09/2026",
-            hora: "10:02",
-            status: "Sucesso"
-        },
-
-        {
-            id: 5,
-            usuario: "Administrador",
-            acao: "Usuário cadastrado",
-            tipo: "Usuário",
-            descricao: "Novo usuário foi cadastrado no sistema.",
-            data: "16/09/2026",
-            hora: "10:21",
-            status: "Sucesso"
-        },
-
-        {
-            id: 6,
-            usuario: "Carlos Santos",
-            acao: "Tentativa de login",
-            tipo: "Segurança",
-            descricao: "Tentativa de acesso com senha incorreta.",
-            data: "16/09/2026",
-            hora: "10:45",
-            status: "Falha"
-        },
-
-        {
-            id: 7,
-            usuario: "Administrador",
-            acao: "Relatório gerado",
-            tipo: "Relatório",
-            descricao: "Relatório geral do sistema foi gerado.",
-            data: "16/09/2026",
-            hora: "11:03",
-            status: "Sucesso"
-        }
-
-    ];
-
-
-    // ==========================================
-    // ELEMENTOS DA PÁGINA
-    // ==========================================
-
-    const listaLogs =
-        document.querySelector("#listaLogs");
-
-    const buscarLog =
-        document.querySelector("#buscarLog");
-
-    const filtroTipoLog =
-        document.querySelector("#filtroTipoLog");
-
-    const filtroUsuarioLog =
-        document.querySelector("#filtroUsuarioLog");
-
-
-    // ==========================================
-    // RENDERIZAR LOGS
-    // ==========================================
-
-    function renderizarLogs(lista = logs) {
-
-        if (!listaLogs) return;
-
-        listaLogs.innerHTML = "";
-
-
-        if (lista.length === 0) {
-
-            listaLogs.innerHTML = `
-
-                <div class="nenhum-log">
-
-                    <p>
-                        Nenhum registro encontrado.
-                    </p>
-
-                </div>
-
-            `;
-
-            return;
-        }
-
-
-        lista.forEach(log => {
-
-            const item =
-                document.createElement("div");
-
-
-            item.classList.add(
-                "item-log"
-            );
-
-
-            const classeStatus =
-                log.status === "Sucesso"
-                    ? "log-sucesso"
-                    : "log-falha";
-
-
-            item.innerHTML = `
-
-                <div class="icone-log">
-
-                    ${obterIconeLog(log.tipo)}
-
-                </div>
-
-
-                <div class="informacoes-log">
-
-                    <div class="cabecalho-log">
-
-                        <strong>
-                            ${log.acao}
-                        </strong>
-
-                        <span class="${classeStatus}">
-                            ${log.status}
-                        </span>
-
-                    </div>
-
-
-                    <p>
-                        ${log.descricao}
-                    </p>
-
-
-                    <div class="detalhes-log">
-
-                        <span>
-                            ${icone("user")} ${log.usuario}
-                        </span>
-
-                        <span>
-                            ${icone("calendar")} ${log.data}
-                        </span>
-
-                        <span>
-                            ${icone("clock")} ${log.hora}
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <button
-                    class="btn-detalhes-log"
-                    onclick="visualizarLog(${log.id})"
-                >
-                    Ver detalhes
-                </button>
-
-            `;
-
-
-            listaLogs.appendChild(item);
-
-        });
-
+    function criar(tag, classe, texto) {
+        const el = document.createElement(tag);
+        if (classe) el.className = classe;
+        if (texto !== undefined) el.textContent = texto;
+        return el;
     }
 
-
-    // ==========================================
-    // ÍCONES DOS LOGS
-    // ==========================================
-
-    function obterIconeLog(tipo) {
-
-        switch (tipo) {
-
-            case "Login":
-                return icone("lock", "ico-card");
-
-            case "Dados":
-                return icone("bar-chart", "ico-card");
-
-            case "Permissão":
-                return icone("shield", "ico-card");
-
-            case "Usuário":
-                return icone("user", "ico-card");
-
-            case "Segurança":
-                return icone("triangle", "ico-card");
-
-            case "Relatório":
-                return icone("file-text", "ico-card");
-
-            default:
-                return icone("file-text", "ico-card");
-
-        }
-
+    function filtros() {
+        const v = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
+        return { q: v("filtroBusca").trim(), tipo: v("filtroTipo"), periodo: v("filtroPeriodo") || "30" };
     }
 
-
-    // ==========================================
-    // BUSCAR LOGS
-    // ==========================================
-
-    function pesquisarLogs() {
-
-        const texto =
-            buscarLog
-                ? buscarLog.value
-                    .toLowerCase()
-                    .trim()
-                : "";
-
-
-        const tipo =
-            filtroTipoLog
-                ? filtroTipoLog.value
-                : "Todos";
-
-
-        const usuario =
-            filtroUsuarioLog
-                ? filtroUsuarioLog.value
-                : "Todos";
-
-
-        const resultado =
-            logs.filter(log => {
-
-                const correspondeTexto =
-
-                    log.usuario
-                        .toLowerCase()
-                        .includes(texto)
-
-                    ||
-
-                    log.acao
-                        .toLowerCase()
-                        .includes(texto)
-
-                    ||
-
-                    log.descricao
-                        .toLowerCase()
-                        .includes(texto);
-
-
-                const correspondeTipo =
-
-                    tipo === "Todos" ||
-
-                    log.tipo === tipo;
-
-
-                const correspondeUsuario =
-
-                    usuario === "Todos" ||
-
-                    log.usuario === usuario;
-
-
-                return (
-
-                    correspondeTexto &&
-
-                    correspondeTipo &&
-
-                    correspondeUsuario
-
-                );
-
-            });
-
-
-        renderizarLogs(resultado);
-
+    async function api(params) {
+        const token = sessionStorage.getItem("safra_token") || "";
+        const qs = new URLSearchParams(params).toString();
+        let resp;
+        try { resp = await fetch(`${NODE}/logs?${qs}`, { headers: { Authorization: `Bearer ${token}` } }); }
+        catch (e) { throw new Error(`Servidor fora do ar. Inicie o Node (${NODE}) e recarregue a página.`); }
+        const corpo = await resp.json().catch(() => null);
+        if (resp.status === 401) throw new Error("Sessão expirada. Entre novamente.");
+        if (!resp.ok) throw new Error((corpo && corpo.erro) || `O servidor respondeu ${resp.status}.`);
+        return corpo;
     }
 
-
-    // ==========================================
-    // EVENTOS DE PESQUISA
-    // ==========================================
-
-    if (buscarLog) {
-
-        buscarLog.addEventListener(
-            "input",
-            pesquisarLogs
-        );
-
+    function haQuanto(seg) {
+        if (seg === null || seg === undefined) return "Sem atividade registrada";
+        if (seg < 60) return "Última atividade agora há pouco";
+        if (seg < 3600) return `Última atividade há ${Math.floor(seg / 60)} min`;
+        if (seg < 86400) return `Última atividade há ${Math.floor(seg / 3600)} h`;
+        return `Última atividade há ${Math.floor(seg / 86400)} dia(s)`;
     }
 
+    function classe(e) { return e.status === "Falha" ? (e.tipo === "Login" ? "aviso" : "erro") : "sucesso"; }
 
-    if (filtroTipoLog) {
-
-        filtroTipoLog.addEventListener(
-            "change",
-            pesquisarLogs
-        );
-
+    function linha(e) {
+        const c = classe(e);
+        const item = criar("div", "log-item");
+        const ev = criar("div", "evento");
+        const ic = criar("div", "evento-icone " + (c === "sucesso" ? "verde" : c === "aviso" ? "amarelo" : "roxo"));
+        ic.innerHTML = c === "sucesso" ? ICO.ok : c === "aviso" ? ICO.aviso : ICO.erro;
+        const info = criar("div");
+        info.append(criar("strong", "", e.acao), criar("span", "", e.descricao || e.tipo));
+        ev.append(ic, info);
+        const user = criar("div", "usuario-log", e.usuario);
+        const dt = criar("div", "data-log", `${e.hoje ? "Hoje" : e.data}, ${e.hora.slice(0, 5)}`);
+        const st = criar("div");
+        st.append(criar("span", "status-log " + c, e.status));
+        const btn = criar("button", "btn-detalhes", "Ver");
+        btn.type = "button";
+        btn.addEventListener("click", () => detalhes(e));
+        item.append(ev, user, dt, st, btn);
+        return item;
     }
 
-
-    if (filtroUsuarioLog) {
-
-        filtroUsuarioLog.addEventListener(
-            "change",
-            pesquisarLogs
-        );
-
+    function detalhes(e) {
+        Safra.avisar(`${e.acao} — ${e.usuario} • ${e.data} ${e.hora} • ${e.status}${e.descricao ? " • " + e.descricao : ""}`);
     }
 
-
-    // ==========================================
-    // VISUALIZAR LOG
-    // ==========================================
-
-    function visualizarLog(id) {
-
-        const log =
-            logs.find(
-                item => item.id === id
-            );
-
-
-        if (!log) return;
-
-
-        alert(`
-
-    DETALHES DO REGISTRO
-
-    Usuário:
-    ${log.usuario}
-
-    Ação:
-    ${log.acao}
-
-    Tipo:
-    ${log.tipo}
-
-    Descrição:
-    ${log.descricao}
-
-    Data:
-    ${log.data}
-
-    Horário:
-    ${log.hora}
-
-    Status:
-    ${log.status}
-
-        `);
-
+    function desenharPaginas() {
+        const box = q('[data-log="paginas"]'); if (!box) return;
+        const ultima = Math.max(1, Math.ceil(total / POR_PAGINA));
+        box.innerHTML = "";
+        const add = (rotulo, alvo, ativo) => {
+            const b = criar("button", "pagina-btn" + (ativo ? " ativo" : ""), rotulo);
+            b.type = "button";
+            b.addEventListener("click", () => { pagina = alvo; carregar(); });
+            box.append(b);
+        };
+        if (pagina > 1) add("‹", pagina - 1);
+        const ini = Math.max(1, Math.min(pagina - 2, ultima - 4)), fim = Math.min(ultima, ini + 4);
+        for (let p = ini; p <= fim; p++) add(String(p), p, p === pagina);
+        if (pagina < ultima) add("›", pagina + 1);
+        const ini1 = total ? (pagina - 1) * POR_PAGINA + 1 : 0, fim1 = Math.min(total, pagina * POR_PAGINA);
+        txt("paginacao-texto", `Mostrando ${fmt(ini1)}–${fmt(fim1)} de ${fmt(total)} eventos`);
     }
 
-
-    // ==========================================
-    // LIMPAR FILTROS
-    // ==========================================
-
-    function limparFiltrosLogs() {
-
-        if (buscarLog) {
-
-            buscarLog.value = "";
-
-        }
-
-
-        if (filtroTipoLog) {
-
-            filtroTipoLog.value = "Todos";
-
-        }
-
-
-        if (filtroUsuarioLog) {
-
-            filtroUsuarioLog.value = "Todos";
-
-        }
-
-
-        renderizarLogs();
-
+    async function carregar() {
+        if (carregando || !raiz()) return;
+        carregando = true;
+        const lista = document.getElementById("listaLogs");
+        try {
+            const d = await api(Object.assign(filtros(), { pagina, por_pagina: POR_PAGINA }));
+            total = d.total; ultimos = d.eventos;
+            lista.innerHTML = "";
+            if (!d.eventos.length) {
+                const vazio = criar("div", "log-item");
+                const ev = criar("div", "evento"); const i = criar("div");
+                i.append(criar("strong", "", "Nenhum evento encontrado"), criar("span", "", "Ajuste os filtros para ver outros registros."));
+                ev.append(i); vazio.append(ev); lista.append(vazio);
+            } else d.eventos.forEach(e => lista.append(linha(e)));
+            txt("total", `${fmt(total)} evento${total === 1 ? "" : "s"}`);
+            const r = d.resumo;
+            txt("hoje", fmt(r.hoje)); txt("acessos", fmt(r.acessos24h));
+            txt("avisos", fmt(r.avisos24h)); txt("erros", fmt(r.erros24h));
+            txt("ultima", haQuanto(r.segundos_ultimo));
+            const falhas = r.avisos24h + r.erros24h;
+            txt("status-titulo", falhas ? "Atenção: há falhas registradas" : "Sistema operando normalmente");
+            txt("status-texto", falhas ? `${fmt(falhas)} falha(s) nas últimas 24 h.` : "Nenhuma falha nas últimas 24 h.");
+            desenharPaginas();
+        } catch (erro) {
+            lista.innerHTML = "";
+            const item = criar("div", "log-item"); const ev = criar("div", "evento"); const i = criar("div");
+            i.append(criar("strong", "", "Não foi possível carregar os logs"), criar("span", "", erro.message));
+            ev.append(i); item.append(ev); lista.append(item);
+            txt("status-titulo", "Não foi possível atualizar"); txt("status-texto", erro.message);
+        } finally { carregando = false; }
     }
 
+    function celula(v) { return `"${String(v ?? "").replace(/"/g, '""')}"`; }
 
-    // ==========================================
-    // ATUALIZAR LOGS
-    // ==========================================
-
-    function atualizarLogs() {
-
-        renderizarLogs();
-
-
-        mostrarMensagemLog(
-            "Sistema de logs atualizado!"
-        );
-
+    async function exportar() {
+        try {
+            const d = await api(Object.assign(filtros(), { todos: 1, pagina: 1 }));
+            if (!d.eventos.length) { Safra.avisar("Não existem logs para exportar."); return; }
+            let csv = "Usuário;Ação;Tipo;Descrição;Data;Hora;Status\n";
+            d.eventos.forEach(e => { csv += [e.usuario, e.acao, e.tipo, e.descricao, e.data, e.hora, e.status].map(celula).join(";") + "\n"; });
+            const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" }));
+            const a = document.createElement("a");
+            a.href = url; a.download = "safra-logs.csv";
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+            Safra.avisar("Logs exportados com sucesso!");
+        } catch (erro) { Safra.avisar(erro.message); }
     }
 
+    function filtrar() { pagina = 1; carregar(); }
 
-    // ==========================================
-    // CONTADORES
-    // ==========================================
-
-    function atualizarContadoresLogs() {
-
-        const totalLogs =
-            document.querySelector(
-                "#totalLogs"
-            );
-
-
-        const logsSucesso =
-            document.querySelector(
-                "#logsSucesso"
-            );
-
-
-        const logsFalha =
-            document.querySelector(
-                "#logsFalha"
-            );
-
-
-        const logins =
-            document.querySelector(
-                "#totalLogins"
-            );
-
-
-        const sucesso =
-            logs.filter(
-                log =>
-                    log.status === "Sucesso"
-            ).length;
-
-
-        const falhas =
-            logs.filter(
-                log =>
-                    log.status === "Falha"
-            ).length;
-
-
-        const quantidadeLogins =
-            logs.filter(
-                log =>
-                    log.tipo === "Login"
-            ).length;
-
-
-        if (totalLogs) {
-
-            totalLogs.textContent =
-                logs.length;
-
-        }
-
-
-        if (logsSucesso) {
-
-            logsSucesso.textContent =
-                sucesso;
-
-        }
-
-
-        if (logsFalha) {
-
-            logsFalha.textContent =
-                falhas;
-
-        }
-
-
-        if (logins) {
-
-            logins.textContent =
-                quantidadeLogins;
-
-        }
-
+    function iniciar() {
+        const r = raiz(); if (!r) return;
+        const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+        on("btnFiltrarLogs", "click", filtrar);
+        on("btnExportar", "click", exportar);
+        on("filtroTipo", "change", filtrar);
+        on("filtroPeriodo", "change", filtrar);
+        on("filtroBusca", "keydown", (e) => { if (e.key === "Enter") filtrar(); });
+        // recarrega quando a página de logs é aberta e a cada 30 s enquanto ela estiver visível
+        const ver = () => { if (location.hash === "#adm.logs") { carregar(); if (!timer) timer = setInterval(carregar, 30000); } else if (timer) { clearInterval(timer); timer = null; } };
+        window.addEventListener("hashchange", ver);
+        ver();
     }
 
-
-    // ==========================================
-    // EXPORTAR LOGS
-    // ==========================================
-
-    function exportarLogs() {
-
-        if (logs.length === 0) {
-
-            alert(
-                "Não existem logs para exportar."
-            );
-
-            return;
-        }
-
-
-        let csv =
-            "Usuário;Ação;Tipo;Descrição;Data;Hora;Status\n";
-
-
-        logs.forEach(log => {
-
-            csv +=
-
-                `${log.usuario};` +
-                `${log.acao};` +
-                `${log.tipo};` +
-                `${log.descricao};` +
-                `${log.data};` +
-                `${log.hora};` +
-                `${log.status}\n`;
-
-        });
-
-
-        const arquivo =
-            new Blob(
-                [csv],
-                {
-                    type:
-                        "text/csv;charset=utf-8;"
-                }
-            );
-
-
-        const url =
-            URL.createObjectURL(arquivo);
-
-
-        const link =
-            document.createElement("a");
-
-
-        link.href = url;
-
-        link.download =
-            "safra-logs.csv";
-
-
-        document.body.appendChild(link);
-
-        link.click();
-
-        document.body.removeChild(link);
-
-        URL.revokeObjectURL(url);
-
-
-        mostrarMensagemLog(
-            "Logs exportados com sucesso!"
-        );
-
-    }
-
-
-    // ==========================================
-    // MENSAGEM DO SISTEMA
-    // ==========================================
-
-    function mostrarMensagemLog(texto) {
-
-        let mensagem =
-            document.querySelector(
-                "#mensagemLog"
-            );
-
-
-        if (!mensagem) {
-
-            mensagem =
-                document.createElement("div");
-
-            mensagem.id =
-                "mensagemLog";
-
-            mensagem.className =
-                "mensagem-log";
-
-            document.body.appendChild(
-                mensagem
-            );
-
-        }
-
-
-        mensagem.textContent =
-            texto;
-
-
-        mensagem.classList.add(
-            "mostrar"
-        );
-
-
-        setTimeout(() => {
-
-            mensagem.classList.remove(
-                "mostrar"
-            );
-
-        }, 2500);
-
-    }
-
-
-    // ==========================================
-    // INICIALIZAÇÃO
-    // ==========================================
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
-
-            renderizarLogs();
-
-            atualizarContadoresLogs();
-
-        }
-    );
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar);
+    else iniciar();
 })();   // fim de adm.logs.js
 
 /* ================= adm.permissoes.js ================= */
+/* Administrador > Permissões com dados reais (Node: GET /permissoes e PUT /permissoes/:perfil).
+   A matriz fica na tabela perfil_permissao do MySQL; os menus e as telas de cada perfil são
+   bloqueados pelo comum.js (GET /permissoes/minhas). Para trocar o endereço do Node:
+   window.SAFRA_API_NODE = "https://..." antes do adm.js */
 (() => {
-    // ==========================================
-    // SAFRA - ADMIN
-    // PÁGINA DE PERMISSÕES
-    // ==========================================
+    const NODE = (window.SAFRA_API_NODE || "http://localhost:3001").replace(/\/$/, "");
+    const raiz = () => document.getElementById("adm.permissoes");
+    const q = (sel) => { const r = raiz(); return r ? r.querySelector(sel) : null; };
+    const txt = (chave, v) => { const el = q(`[data-perm="${chave}"]`); if (el) el.textContent = v; };
+    const ICONES = {
+        produtor: `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>`,
+        analista: `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v3.5M15 2.5v3.5M9 18v3.5M15 18v3.5M2.5 9H6M2.5 15H6M18 9h3.5M18 15h3.5"/></svg>`,
+        administrador: `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>`
+    };
+    const CHECK = '<svg class="ico ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+    let dados = null, carregando = false, ultimaCarga = 0;
 
-    let permissoes = [
-        {
-            id: 1,
-            perfil: "Administrador",
-            descricao: "Acesso completo ao sistema",
-            usuarios: 2,
-            dashboard: true,
-            usuariosSistema: true,
-            permissoes: true,
-            dados: true,
-            logs: true,
-            relatorios: true,
-            alertas: true,
-            configuracoes: true
-        },
+    function criar(tag, classe, texto) {
+        const el = document.createElement(tag);
+        if (classe) el.className = classe;
+        if (texto !== undefined) el.textContent = texto;
+        return el;
+    }
 
-        {
-            id: 2,
-            perfil: "Analista de Dados",
-            descricao: "Acesso aos dados e análises",
-            usuarios: 5,
-            dashboard: true,
-            usuariosSistema: false,
-            permissoes: false,
-            dados: true,
-            logs: true,
-            relatorios: true,
-            alertas: true,
-            configuracoes: false
-        },
+    async function api(caminho, opcoes) {
+        const token = sessionStorage.getItem("safra_token") || "";
+        const o = opcoes || {};
+        let resp;
+        try {
+            resp = await fetch(NODE + caminho, Object.assign({}, o, {
+                headers: Object.assign({ "Content-Type": "application/json", Authorization: `Bearer ${token}` }, o.headers || {})
+            }));
+        } catch (e) { throw new Error(`Servidor fora do ar. Inicie o Node (${NODE}) e recarregue a página.`); }
+        const corpo = await resp.json().catch(() => null);
+        if (resp.status === 401) throw new Error("Sessão expirada. Entre novamente.");
+        if (!resp.ok) throw new Error((corpo && corpo.erro) || `O servidor respondeu ${resp.status}.`);
+        return corpo;
+    }
 
-        {
-            id: 3,
-            perfil: "Produtor",
-            descricao: "Acesso aos dados da produção",
-            usuarios: 17,
-            dashboard: true,
-            usuariosSistema: false,
-            permissoes: false,
-            dados: true,
-            logs: false,
-            relatorios: true,
-            alertas: true,
-            configuracoes: false
-        }
-    ];
+    function aviso(msg) {
+        const el = q('[data-perm="aviso"]');
+        if (!el) return;
+        el.textContent = msg || "";
+        el.style.display = msg ? "" : "none";
+    }
 
+    /* ---------- tela ---------- */
+    function desenhar() {
+        if (!dados) return;
+        const c = dados.cards, perfis = dados.perfis;
+        txt("c1", c.perfis); txt("c1-sub", "Perfis de acesso");
+        txt("c2", c.usuarios_ativos); txt("c2-sub", `${c.usuarios_total} usuários cadastrados`);
+        txt("c3", c.permissoes_ativas); txt("c3-sub", `de ${c.permissoes_total} possíveis`);
+        txt("c4", c.alteracoes_7d); txt("c4-sub", "Últimos 7 dias");
+        txt("contador", `${perfis.length} ${perfis.length === 1 ? "perfil" : "perfis"}`);
 
-    // ==========================================
-    // ELEMENTOS
-    // ==========================================
+        const lista = q('[data-perm="perfis"]');
+        lista.replaceChildren();
+        perfis.forEach(p => {
+            const card = criar("div", "perfil-card");
+            const ic = criar("div", `perfil-icone ${p.chave}`);
+            ic.innerHTML = ICONES[p.chave] || "";
+            const info = criar("div", "perfil-info");
+            info.append(criar("strong", "", p.nome), criar("span", "", p.descricao));
+            const ac = criar("div", "perfil-acesso");
+            ac.append(criar("b", "", String(p.usuarios)), criar("span", "", p.usuarios === 1 ? "usuário" : "usuários"));
+            const bt = criar("button", "btn-gerenciar", "Gerenciar");
+            bt.type = "button";
+            bt.addEventListener("click", () => abrirGerenciar(p.chave));
+            card.append(ic, info, ac, bt);
+            lista.appendChild(card);
+        });
 
-    const listaPermissoes =
-        document.querySelector("#listaPermissoes");
-
-    const busca =
-        document.querySelector("#buscarPermissao");
-
-    const filtro =
-        document.querySelector("#filtroPermissao");
-
-    const btnSalvar =
-        document.querySelector("#salvarPermissoes");
-
-
-    // ==========================================
-    // MOSTRAR PERMISSÕES
-    // ==========================================
-
-    function mostrarPermissoes(lista = permissoes) {
-
-        if (!listaPermissoes) return;
-
-        listaPermissoes.innerHTML = "";
-
-        lista.forEach(item => {
-
-            const card = document.createElement("div");
-
-            card.classList.add("card-permissao");
-
-            card.innerHTML = `
-
-                <div class="cabecalho-permissao">
-
-                    <div>
-
-                        <h3>
-                            ${item.perfil}
-                        </h3>
-
-                        <p>
-                            ${item.descricao}
-                        </p>
-
-                    </div>
-
-                    <span>
-                        ${item.usuarios} usuários
-                    </span>
-
-                </div>
-
-
-                <div class="permissoes-grid">
-
-                    ${criarPermissao(
-                        item.id,
-                        "dashboard",
-                        "Dashboard"
-                    )}
-
-                    ${criarPermissao(
-                        item.id,
-                        "usuariosSistema",
-                        "Usuários"
-                    )}
-
-                    ${criarPermissao(
-                        item.id,
-                        "permissoes",
-                        "Permissões"
-                    )}
-
-                    ${criarPermissao(
-                        item.id,
-                        "dados",
-                        "Dados"
-                    )}
-
-                    ${criarPermissao(
-                        item.id,
-                        "logs",
-                        "Logs do sistema"
-                    )}
-
-                    ${criarPermissao(
-                        item.id,
-                        "relatorios",
-                        "Relatórios"
-                    )}
-
-                    ${criarPermissao(
-                        item.id,
-                        "alertas",
-                        "Alertas"
-                    )}
-
-                    ${criarPermissao(
-                        item.id,
-                        "configuracoes",
-                        "Configurações"
-                    )}
-
-                </div>
-
-            `;
-
-            listaPermissoes.appendChild(card);
-
+        const cab = q('[data-perm="matriz-cab"]');
+        cab.replaceChildren(criar("th", "", "Recurso"));
+        perfis.forEach(p => cab.appendChild(criar("th", "", p.curto)));
+        const corpo = q('[data-perm="matriz-corpo"]');
+        corpo.replaceChildren();
+        dados.recursos.forEach(r => {
+            const tr = criar("tr");
+            tr.appendChild(criar("td", "", r.rotulo));
+            perfis.forEach(p => {
+                const td = criar("td");
+                if (!p.aplica.includes(r.chave)) {
+                    const s = criar("span", "bloqueado", "—");
+                    s.title = "Este perfil não tem essa tela";
+                    td.appendChild(s);
+                } else if (dados.matriz[p.chave][r.chave]) {
+                    const s = criar("span", "permitido");
+                    s.innerHTML = CHECK;
+                    td.appendChild(s);
+                } else {
+                    td.appendChild(criar("span", "perm-bloq", "Bloqueado"));
+                }
+                tr.appendChild(td);
+            });
+            corpo.appendChild(tr);
         });
     }
 
-
-    // ==========================================
-    // CRIAR PERMISSÃO
-    // ==========================================
-
-    function criarPermissao(
-        id,
-        nome,
-        titulo
-    ) {
-
-        const perfil = permissoes.find(
-            item => item.id === id
-        );
-
-        const ativada = perfil[nome];
-
-        return `
-
-            <div class="permissao-item">
-
-                <div class="permissao-info">
-
-                    <span>
-                        ${titulo}
-                    </span>
-
-                    <small>
-                        ${
-                            ativada
-                                ? "Acesso permitido"
-                                : "Acesso bloqueado"
-                        }
-                    </small>
-
-                </div>
-
-
-                <label class="switch">
-
-                    <input
-                        type="checkbox"
-                        ${
-                            ativada
-                                ? "checked"
-                                : ""
-                        }
-
-                        onchange="
-                            alterarPermissao(
-                                ${id},
-                                '${nome}',
-                                this.checked
-                            )
-                        "
-                    >
-
-                    <span class="slider"></span>
-
-                </label>
-
-            </div>
-
-        `;
+    /* ---------- janelas ---------- */
+    function abrirJanela(titulo, descricao) {
+        const fundo = criar("div", "safra-modal-fundo"), caixa = criar("div", "safra-modal perm-modal");
+        const focoAnterior = document.activeElement;
+        caixa.setAttribute("role", "dialog");
+        caixa.setAttribute("aria-modal", "true");
+        caixa.setAttribute("aria-label", titulo);
+        caixa.appendChild(criar("h3", "", titulo));
+        caixa.appendChild(criar("p", "", descricao));
+        fundo.appendChild(caixa);
+        document.body.appendChild(fundo);
+        function sair() {
+            document.removeEventListener("keydown", teclado);
+            fundo.remove();
+            if (focoAnterior && focoAnterior.focus) focoAnterior.focus();
+        }
+        function teclado(e) { if (e.key === "Escape") sair(); }
+        fundo.addEventListener("mousedown", (e) => { if (e.target === fundo) sair(); });
+        document.addEventListener("keydown", teclado);
+        return { caixa, sair };
     }
 
-
-    // ==========================================
-    // ALTERAR PERMISSÃO
-    // ==========================================
-
-    function alterarPermissao(
-        id,
-        permissao,
-        valor
-    ) {
-
-        const perfil = permissoes.find(
-            item => item.id === id
-        );
-
-        if (!perfil) return;
-
-        perfil[permissao] = valor;
-
-        mostrarPermissoes();
-
+    function abrirEscolha() {
+        const { caixa, sair } = abrirJanela("Editar permissões", "Escolha o perfil que você quer ajustar.");
+        const lista = criar("div", "perm-lista");
+        dados.perfis.forEach(p => {
+            const bt = criar("button", "safra-btn perm-escolha", p.nome);
+            bt.type = "button";
+            bt.addEventListener("click", () => { sair(); abrirGerenciar(p.chave); });
+            lista.appendChild(bt);
+        });
+        caixa.appendChild(lista);
+        const botoes = criar("div", "safra-modal-botoes");
+        const fechar = criar("button", "safra-btn", "Fechar");
+        fechar.type = "button";
+        fechar.addEventListener("click", sair);
+        botoes.appendChild(fechar);
+        caixa.appendChild(botoes);
     }
 
-
-    // ==========================================
-    // BUSCAR
-    // ==========================================
-
-    function pesquisarPermissoes() {
-
-        const texto =
-            busca.value
-                .toLowerCase()
-                .trim();
-
-        const perfilSelecionado =
-            filtro.value;
-
-
-        const resultado =
-            permissoes.filter(item => {
-
-                const correspondeNome =
-                    item.perfil
-                        .toLowerCase()
-                        .includes(texto);
-
-                const correspondeFiltro =
-                    perfilSelecionado === "Todos" ||
-                    item.perfil === perfilSelecionado;
-
-                return (
-                    correspondeNome &&
-                    correspondeFiltro
-                );
-
-            });
-
-
-        mostrarPermissoes(resultado);
-
-    }
-
-
-    if (busca) {
-
-        busca.addEventListener(
-            "input",
-            pesquisarPermissoes
-        );
-
-    }
-
-
-    if (filtro) {
-
-        filtro.addEventListener(
-            "change",
-            pesquisarPermissoes
-        );
-
-    }
-
-
-    // ==========================================
-    // SALVAR
-    // ==========================================
-
-    if (btnSalvar) {
-
-        btnSalvar.addEventListener(
-            "click",
-            function () {
-
-                localStorage.setItem(
-                    "safraPermissoes",
-                    JSON.stringify(permissoes)
-                );
-
-                alert(
-                    "Permissões salvas com sucesso!"
-                );
-
+    function abrirGerenciar(chave) {
+        const p = dados && dados.perfis.find(x => x.chave === chave);
+        if (!p) return;
+        const { caixa, sair } = abrirJanela(`Permissões: ${p.nome}`,
+            "Marque o que este perfil pode acessar. A mudança vale na próxima vez que a pessoa abrir ou recarregar o sistema.");
+        const lista = criar("div", "perm-lista"), caixas = {};
+        dados.recursos.filter(r => p.aplica.includes(r.chave)).forEach(r => {
+            const linha = criar("label", "perm-linha");
+            const cb = criar("input");
+            cb.type = "checkbox";
+            cb.checked = !!dados.matriz[p.chave][r.chave];
+            const travada = p.travadas.includes(r.chave);
+            if (travada) { cb.checked = true; cb.disabled = true; }
+            caixas[r.chave] = cb;
+            linha.append(cb, criar("span", "", r.rotulo));
+            if (travada) linha.appendChild(criar("small", "", "obrigatória para o administrador"));
+            lista.appendChild(linha);
+        });
+        caixa.appendChild(lista);
+        const erro = criar("p", "safra-modal-erro");
+        caixa.appendChild(erro);
+        const botoes = criar("div", "safra-modal-botoes");
+        const cancelar = criar("button", "safra-btn", "Cancelar");
+        const salvar = criar("button", "safra-btn primario", "Salvar");
+        cancelar.type = salvar.type = "button";
+        botoes.append(cancelar, salvar);
+        caixa.appendChild(botoes);
+        cancelar.addEventListener("click", sair);
+        salvar.addEventListener("click", async () => {
+            const recursos = {};
+            Object.keys(caixas).forEach(k => { recursos[k] = caixas[k].checked; });
+            salvar.disabled = true;
+            salvar.textContent = "Salvando…";
+            try {
+                await api(`/permissoes/${p.chave}`, { method: "PUT", body: JSON.stringify({ recursos }) });
+                sair();
+                if (window.Safra && Safra.avisar) Safra.avisar(`Permissões de ${p.nome} atualizadas.`);
+                if (window.Safra && Safra.recarregarPermissoes) Safra.recarregarPermissoes();
+                await carregar(false);
+            } catch (e) {
+                erro.textContent = e.message;
+                salvar.disabled = false;
+                salvar.textContent = "Salvar";
             }
-        );
-
+        });
+        const primeira = lista.querySelector("input:not(:disabled)");
+        if (primeira) primeira.focus();
     }
 
-
-    // ==========================================
-    // CARREGAR DADOS SALVOS
-    // ==========================================
-
-    function carregarPermissoes() {
-
-        const dados =
-            localStorage.getItem(
-                "safraPermissoes"
-            );
-
-        if (!dados) return;
-
+    /* ---------- carga ---------- */
+    async function carregar() {
+        if (carregando) return;
+        carregando = true;
         try {
-
-            permissoes = JSON.parse(dados);
-
-        } catch (erro) {
-
-            console.error(
-                "Erro ao carregar permissões:",
-                erro
-            );
-
-        }
-
+            dados = await api("/permissoes");
+            ultimaCarga = Date.now();
+            aviso("");
+            desenhar();
+        } catch (e) {
+            aviso(`Permissões indisponíveis: ${e.message}`);
+        } finally { carregando = false; }
     }
 
-
-    // ==========================================
-    // INICIALIZAÇÃO
-    // ==========================================
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
-
-            carregarPermissoes();
-
-            mostrarPermissoes();
-
-        }
-    );
+    document.addEventListener("DOMContentLoaded", () => {
+        const r = raiz();
+        if (!r) return;
+        const nova = q("#btnNovaPermissao");
+        if (nova) nova.addEventListener("click", () => { if (dados) abrirEscolha(); else carregar(); });
+        // recarrega sempre que a aba Permissões é aberta
+        new MutationObserver(() => { if (r.classList.contains("pagina-ativa") && Date.now() - ultimaCarga > 3000) carregar(); })
+            .observe(r, { attributes: true, attributeFilter: ["class"] });
+        if (r.classList.contains("pagina-ativa")) carregar();
+    });
 })();   // fim de adm.permissoes.js
 
 /* ================= adm.relatorios.js ================= */
+/* Administrador > Relatórios com dados reais (Node: GET /relatorios/resumo e GET /relatorios/:tipo).
+   Ver relatório abre a tabela na tela; baixar gera PDF (impressão), Excel ou CSV.
+   Para trocar o endereço do Node: window.SAFRA_API_NODE = "https://..." antes do adm.js */
 (() => {
-    // ==========================================
-    // RELATÓRIOS - PAINEL ADMINISTRADOR
-    // ==========================================
+    const NODE = (window.SAFRA_API_NODE || "http://localhost:3001").replace(/\/$/, "");
+    const raiz = () => document.getElementById("adm.relatorios");
+    const q = (sel) => { const r = raiz(); return r ? r.querySelector(sel) : null; };
+    const txt = (chave, v) => { const el = q(`[data-rel="${chave}"]`); if (el) el.textContent = v; };
+    const fmt = (n) => Number(n || 0).toLocaleString("pt-BR");
+    const val = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
+    const NOMES = { usuarios: "Relatório de usuários", dados: "Relatório de dados", atividades: "Relatório de atividades",
+        sistema: "Relatório do sistema", alertas: "Relatório de alertas", geral: "Relatório geral" };
+    const CORES = { usuarios: "verde", dados: "azul", atividades: "amarelo", sistema: "roxo", alertas: "amarelo", geral: "verde" };
+    let carregando = false, ultimoResumo = null;
 
-    // Dados dos relatórios
-    let relatorios = [
-        {
-            id: 1,
-            nome: "Relatório Geral do Sistema",
-            tipo: "Sistema",
-            descricao: "Resumo geral dos usuários, propriedades e produção.",
-            periodo: "Mensal",
-            data: "10/09/2026",
-            responsavel: "Administrador",
-            status: "Disponível"
-        },
-        {
-            id: 2,
-            nome: "Relatório de Usuários",
-            tipo: "Usuários",
-            descricao: "Informações sobre usuários cadastrados e acessos ao sistema.",
-            periodo: "Mensal",
-            data: "09/09/2026",
-            responsavel: "Administrador",
-            status: "Disponível"
-        },
-        {
-            id: 3,
-            nome: "Relatório de Produção",
-            tipo: "Produção",
-            descricao: "Dados da produção agrícola registrada no sistema.",
-            periodo: "Trimestral",
-            data: "08/09/2026",
-            responsavel: "Administrador",
-            status: "Disponível"
-        },
-        {
-            id: 4,
-            nome: "Relatório de Propriedades",
-            tipo: "Propriedades",
-            descricao: "Resumo das propriedades cadastradas e suas áreas cultivadas.",
-            periodo: "Mensal",
-            data: "07/09/2026",
-            responsavel: "Administrador",
-            status: "Disponível"
-        },
-        {
-            id: 5,
-            nome: "Relatório de Atividades",
-            tipo: "Atividades",
-            descricao: "Registro das principais atividades realizadas pelos usuários.",
-            periodo: "Semanal",
-            data: "06/09/2026",
-            responsavel: "Administrador",
-            status: "Disponível"
-        }
-    ];
+    function criar(tag, classe, texto) {
+        const el = document.createElement(tag);
+        if (classe) el.className = classe;
+        if (texto !== undefined) el.textContent = texto;
+        return el;
+    }
 
+    async function api(caminho) {
+        const token = sessionStorage.getItem("safra_token") || "";
+        let resp;
+        try { resp = await fetch(NODE + caminho, { headers: { Authorization: `Bearer ${token}` } }); }
+        catch (e) { throw new Error(`Servidor fora do ar. Inicie o Node (${NODE}) e recarregue a página.`); }
+        const corpo = await resp.json().catch(() => null);
+        if (resp.status === 401) throw new Error("Sessão expirada. Entre novamente.");
+        if (!resp.ok) throw new Error((corpo && corpo.erro) || `O servidor respondeu ${resp.status}.`);
+        return corpo;
+    }
 
-    // ==========================================
-    // INICIALIZAÇÃO
-    // ==========================================
+    const dias = () => val("periodo") || "30";
 
-    document.addEventListener("DOMContentLoaded", function () {
+    // ---------- tela principal ----------
+    async function carregar() {
+        if (carregando || !raiz()) return;
+        carregando = true;
+        try {
+            const d = await api(`/relatorios/resumo?dias=${dias()}`);
+            ultimoResumo = d;
+            const c = d.contagens;
+            txt("gerados", fmt(d.gerados_mes));
+            txt("analisados", fmt(c.eventos)); txt("analisados-sub", d.periodo);
+            txt("ativos", fmt(c.ativos));
+            txt("ativos-sub", c.usuarios ? `${(c.ativos / c.usuarios * 100).toFixed(1).replace(".", ",")}% do total` : "Sem usuários");
+            txt("alertas", fmt(c.alertas)); txt("alertas-sub", c.alertas ? "Requerem análise" : "Nenhuma falha");
+            txt("r-usuarios", fmt(c.usuarios)); txt("r-dispositivos", fmt(c.dispositivos));
+            txt("r-eventos", fmt(c.eventos)); txt("r-alertas", fmt(c.alertas));
+            txt("resumo-periodo", d.periodo);
+            txt("info-usuarios", `${fmt(c.usuarios)} usuários`);
+            txt("info-dados", `${fmt(c.dispositivos)} dispositivos`);
+            txt("info-atividades", `${fmt(c.eventos)} eventos`);
+            const h = Math.floor(d.sistema_online_s / 3600), m = Math.floor(d.sistema_online_s % 3600 / 60);
+            txt("info-sistema", `Online há ${h} h ${m} min`);
+            txt("info-alertas", `${fmt(c.alertas)} alertas`);
+            txt("info-geral", "Dados completos");
+            const selo = q('[data-rel="selo-alertas"]');
+            if (selo) { selo.textContent = c.alertas ? "Atenção" : "Disponível"; selo.className = c.alertas ? "status-atencao" : "status-disponivel"; }
+            raiz().querySelectorAll(".relatorio-info span").forEach(s => { s.textContent = "Atualizado agora"; });
+            txt("status-titulo", "Relatórios atualizados");
+            txt("status-texto", "Os números abaixo vêm do banco de dados em tempo real.");
+            txt("atualizado", "agora há pouco");
+            desenharRecentes(d.recentes);
+            aplicarTipo();
+        } catch (erro) {
+            txt("status-titulo", "Não foi possível atualizar"); txt("status-texto", erro.message);
+        } finally { carregando = false; }
+    }
 
-        renderizarRelatorios();
-
-        // Pesquisa
-        const campoBusca = document.getElementById("buscarRelatorio");
-
-        if (campoBusca) {
-            campoBusca.addEventListener("input", renderizarRelatorios);
-        }
-
-        // Filtro por tipo
-        const filtroTipo = document.getElementById("filtroTipoRelatorio");
-
-        if (filtroTipo) {
-            filtroTipo.addEventListener("change", renderizarRelatorios);
-        }
-
-        // Filtro por período
-        const filtroPeriodo = document.getElementById("filtroPeriodoRelatorio");
-
-        if (filtroPeriodo) {
-            filtroPeriodo.addEventListener("change", renderizarRelatorios);
-        }
-
-        atualizarIndicadores();
-    });
-
-
-    // ==========================================
-    // RENDERIZAR RELATÓRIOS
-    // ==========================================
-
-    function renderizarRelatorios() {
-
-        const lista = document.getElementById("listaRelatorios");
-
-        if (!lista) return;
-
-        const busca = document
-            .getElementById("buscarRelatorio")
-            ?.value
-            .toLowerCase() || "";
-
-        const tipo = document
-            .getElementById("filtroTipoRelatorio")
-            ?.value || "todos";
-
-        const periodo = document
-            .getElementById("filtroPeriodoRelatorio")
-            ?.value || "todos";
-
-
-        const filtrados = relatorios.filter(relatorio => {
-
-            const correspondeBusca =
-                relatorio.nome.toLowerCase().includes(busca) ||
-                relatorio.tipo.toLowerCase().includes(busca) ||
-                relatorio.descricao.toLowerCase().includes(busca);
-
-            const correspondeTipo =
-                tipo === "todos" ||
-                relatorio.tipo === tipo;
-
-            const correspondePeriodo =
-                periodo === "todos" ||
-                relatorio.periodo === periodo;
-
-            return (
-                correspondeBusca &&
-                correspondeTipo &&
-                correspondePeriodo
-            );
+    function aplicarTipo() {
+        const tipo = val("tipoRelatorio") || "todos";
+        let n = 0;
+        raiz().querySelectorAll("[data-rel-card]").forEach(c => {
+            const mostrar = tipo === "todos" || c.dataset.relCard === tipo;
+            c.style.display = mostrar ? "" : "none";
+            if (mostrar) n++;
         });
+        txt("total-cards", `${n} relatório${n === 1 ? "" : "s"}`);
+    }
 
-
-        lista.innerHTML = "";
-
-
-        if (filtrados.length === 0) {
-
-            lista.innerHTML = `
-                <div class="sem-relatorios">
-                    <p>${icone("file-text")} Nenhum relatório encontrado.</p>
-                </div>
-            `;
-
-            return;
+    function desenharRecentes(lista) {
+        const box = document.getElementById("relRecentes"); if (!box) return;
+        box.innerHTML = "";
+        if (!lista.length) {
+            const v = criar("div", "relatorio-recente"); const i = criar("div");
+            i.append(criar("strong", "", "Nenhum relatório gerado ainda"), criar("span", "", "Gere um relatório para ele aparecer aqui."));
+            v.append(i); box.append(v); return;
         }
-
-
-        filtrados.forEach(relatorio => {
-
-            const card = document.createElement("div");
-
-            card.className = "card-relatorio";
-
-            card.innerHTML = `
-                <div class="icone-relatorio">
-                    ${obterIconeRelatorio(relatorio.tipo)}
-                </div>
-
-                <div class="informacoes-relatorio">
-
-                    <h3>${relatorio.nome}</h3>
-
-                    <p>${relatorio.descricao}</p>
-
-                    <div class="dados-relatorio">
-
-                        <span>
-                            ${icone("bar-chart")} ${relatorio.tipo}
-                        </span>
-
-                        <span>
-                            ${icone("calendar")} ${relatorio.data}
-                        </span>
-
-                        <span>
-                            ${icone("clock")} ${relatorio.periodo}
-                        </span>
-
-                    </div>
-
-                    <small>
-                        Responsável: ${relatorio.responsavel}
-                    </small>
-
-                </div>
-
-                <div class="acoes-relatorio">
-
-                    <span class="status-relatorio">
-                        ${icone("check")} ${relatorio.status}
-                    </span>
-
-                    <button
-                        onclick="visualizarRelatorio(${relatorio.id})">
-                        ${icone("eye")} Visualizar
-                    </button>
-
-                    <button
-                        onclick="baixarRelatorio(${relatorio.id})">
-                        ${icone("download")} Baixar
-                    </button>
-
-                </div>
-            `;
-
-            lista.appendChild(card);
+        lista.forEach(r => {
+            const item = criar("div", "relatorio-recente");
+            item.append(criar("div", "mini-icone " + (CORES[r.tipo] || "verde"), (r.formato || "tela").toUpperCase().slice(0, 3)));
+            const i = criar("div");
+            i.append(criar("strong", "", NOMES[r.tipo] || "Relatório"), criar("span", "", `Gerado ${r.quando}`));
+            item.append(i);
+            const b = criar("button", "", "↓"); b.type = "button"; b.title = "Baixar novamente";
+            b.addEventListener("click", () => baixar(r.tipo, ["pdf", "xls", "csv"].includes(r.formato) ? r.formato : "csv", r.dias));
+            item.append(b); box.append(item);
         });
     }
 
+    // ---------- exportação ----------
+    const esc = (t) => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const nomeArquivo = (rel, ext) => `safra-${rel.tipo}-${new Date().toISOString().slice(0, 10)}.${ext}`;
 
-    // ==========================================
-    // ÍCONE DE CADA TIPO DE RELATÓRIO
-    // ==========================================
+    function salvar(conteudo, mime, nome) {
+        const url = URL.createObjectURL(new Blob([conteudo], { type: mime }));
+        const a = document.createElement("a");
+        a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
 
-    function obterIconeRelatorio(tipo) {
+    function tabelaHtml(rel) {
+        return `<table border="1" cellspacing="0" cellpadding="5"><thead><tr>${rel.colunas.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>` +
+            rel.linhas.map(l => `<tr>${l.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
+    }
 
-        switch (tipo) {
-
-            case "Sistema":
-                return icone("sliders", "ico-card");
-
-            case "Usuários":
-                return icone("users", "ico-card");
-
-            case "Produção":
-                return icone("sprout", "ico-card");
-
-            case "Propriedades":
-                return icone("home", "ico-card");
-
-            case "Atividades":
-                return icone("file-text", "ico-card");
-
-            default:
-                return icone("file-text", "ico-card");
+    function exportar(rel, formato) {
+        if (formato === "csv") {
+            const cel = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+            const csv = [rel.colunas, ...rel.linhas].map(l => l.map(cel).join(";")).join("\n");
+            salvar("﻿" + csv, "text/csv;charset=utf-8;", nomeArquivo(rel, "csv"));
+        } else if (formato === "xls") {
+            const html = `<html><head><meta charset="utf-8"></head><body><h3>${esc(rel.titulo)}</h3><p>${esc(rel.periodo)} • ${esc(rel.resumo)}</p>${tabelaHtml(rel)}</body></html>`;
+            salvar(html, "application/vnd.ms-excel;charset=utf-8;", nomeArquivo(rel, "xls"));
+        } else {
+            const w = window.open("", "_blank");
+            if (!w) { Safra.avisar("Permita pop-ups para gerar o PDF."); return; }
+            w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(rel.titulo)}</title>
+<style>body{font-family:Arial,sans-serif;color:#222;margin:28px}h1{font-size:20px;margin:0 0 4px}p{color:#555;font-size:12px;margin:2px 0}
+table{border-collapse:collapse;width:100%;margin-top:14px;font-size:11px}th{background:#218149;color:#fff;text-align:left}th,td{border:1px solid #ccc;padding:5px 7px}tr:nth-child(even) td{background:#f4f8f5}</style></head>
+<body><h1>Safra • ${esc(rel.titulo)}</h1><p>${esc(rel.periodo)} • ${esc(rel.resumo)}</p><p>Gerado em ${new Date(rel.gerado_em).toLocaleString("pt-BR")}</p>${tabelaHtml(rel)}</body></html>`);
+            w.document.close(); w.focus(); setTimeout(() => w.print(), 400);
         }
     }
 
-
-    // ==========================================
-    // VISUALIZAR RELATÓRIO
-    // ==========================================
-
-    function visualizarRelatorio(id) {
-
-        const relatorio = relatorios.find(
-            item => item.id === id
-        );
-
-        if (!relatorio) return;
-
-
-        alert(
-            `RELATÓRIO\n\n` +
-            `Nome: ${relatorio.nome}\n` +
-            `Tipo: ${relatorio.tipo}\n` +
-            `Período: ${relatorio.periodo}\n` +
-            `Data: ${relatorio.data}\n` +
-            `Responsável: ${relatorio.responsavel}\n\n` +
-            `${relatorio.descricao}`
-        );
+    async function buscar(tipo, d, formato) {
+        return api(`/relatorios/${tipo}?dias=${d}${formato ? `&registrar=1&formato=${formato}` : ""}`);
     }
 
-
-    // ==========================================
-    // BAIXAR RELATÓRIO
-    // ==========================================
-
-    function baixarRelatorio(id) {
-
-        const relatorio = relatorios.find(
-            item => item.id === id
-        );
-
-        if (!relatorio) return;
-
-
-        const conteudo = [
-            ["RELATÓRIO"],
-            [],
-            ["Nome", relatorio.nome],
-            ["Tipo", relatorio.tipo],
-            ["Descrição", relatorio.descricao],
-            ["Período", relatorio.periodo],
-            ["Data", relatorio.data],
-            ["Responsável", relatorio.responsavel],
-            ["Status", relatorio.status]
-        ];
-
-
-        const csv = conteudo
-            .map(linha =>
-                linha
-                    .map(campo => `"${campo}"`)
-                    .join(";")
-            )
-            .join("\n");
-
-
-        const blob = new Blob(
-            ["\ufeff" + csv],
-            {
-                type: "text/csv;charset=utf-8;"
-            }
-        );
-
-
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement("a");
-
-        link.href = url;
-
-        link.download =
-            relatorio.nome
-                .replace(/\s+/g, "_")
-                .toLowerCase() + ".csv";
-
-        link.click();
-
-        URL.revokeObjectURL(url);
-
-
-        mostrarMensagemRelatorio(
-            "Relatório baixado com sucesso!"
-        );
+    async function baixar(tipo, formato, d) {
+        try {
+            const rel = await buscar(tipo, d || dias(), formato);
+            if (!rel.linhas.length) { Safra.avisar("Não há dados neste relatório para o período."); return; }
+            exportar(rel, formato);
+            Safra.avisar(`${rel.titulo} gerado (${formato.toUpperCase()}).`);
+            carregar();
+        } catch (erro) { Safra.avisar(erro.message); }
     }
 
+    // ---------- visualização na tela ----------
+    function fecharModal() { const m = document.getElementById("relModal"); if (m) m.remove(); }
 
-    // ==========================================
-    // GERAR NOVO RELATÓRIO
-    // ==========================================
-
-    function gerarRelatorio() {
-
-        const tipo = prompt(
-            "Digite o tipo do relatório:\n\n" +
-            "Sistema\n" +
-            "Usuários\n" +
-            "Produção\n" +
-            "Propriedades\n" +
-            "Atividades"
-        );
-
-        if (!tipo) return;
-
-
-        const nome = prompt(
-            "Digite o nome do relatório:"
-        );
-
-        if (!nome) return;
-
-
-        const novoRelatorio = {
-
-            id: relatorios.length > 0
-                ? Math.max(...relatorios.map(r => r.id)) + 1
-                : 1,
-
-            nome: nome,
-
-            tipo: tipo,
-
-            descricao:
-                "Relatório gerado pelo administrador.",
-
-            periodo: "Mensal",
-
-            data:
-                new Date().toLocaleDateString("pt-BR"),
-
-            responsavel: "Administrador",
-
-            status: "Disponível"
-        };
-
-
-        relatorios.push(novoRelatorio);
-
-
-        salvarRelatorios();
-
-        renderizarRelatorios();
-
-        atualizarIndicadores();
-
-
-        mostrarMensagemRelatorio(
-            "Novo relatório gerado com sucesso!"
-        );
+    async function ver(tipo) {
+        fecharModal();
+        const fundo = criar("div"); fundo.id = "relModal";
+        fundo.style.cssText = "position:fixed;inset:0;background:rgba(20,35,30,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px";
+        const caixa = criar("div");
+        caixa.style.cssText = "background:#fff;border-radius:14px;max-width:1000px;width:100%;max-height:88vh;display:flex;flex-direction:column;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.25)";
+        caixa.append(criar("strong", "", "Carregando relatório…"));
+        fundo.append(caixa);
+        fundo.addEventListener("click", (e) => { if (e.target === fundo) fecharModal(); });
+        document.body.append(fundo);
+        try {
+            const rel = await buscar(tipo, dias());
+            caixa.innerHTML = "";
+            const topo = criar("div"); topo.style.cssText = "display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px";
+            const t = criar("div"); t.append(criar("h2", "", rel.titulo), criar("span", "", `${rel.periodo} • ${rel.resumo}`));
+            t.querySelector("span").style.cssText = "color:#647872;font-size:13px";
+            const acoes = criar("div"); acoes.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
+            [["PDF", "pdf"], ["Excel", "xls"], ["CSV", "csv"]].forEach(([nome, f]) => {
+                const b = criar("button", "btn-gerar", "↓ " + nome); b.type = "button"; b.style.height = "38px";
+                b.addEventListener("click", () => baixar(tipo, f)); acoes.append(b);
+            });
+            const x = criar("button", "btn-ver", "Fechar"); x.type = "button"; x.addEventListener("click", fecharModal); acoes.append(x);
+            topo.append(t, acoes);
+            const rolagem = criar("div"); rolagem.style.cssText = "overflow:auto;border:1px solid #e1e9e5;border-radius:10px";
+            const tab = criar("table"); tab.style.cssText = "width:100%;border-collapse:collapse;font-size:13px";
+            const cab = criar("tr"); rel.colunas.forEach(c => { const th = criar("th", "", c); th.style.cssText = "text-align:left;padding:9px 12px;background:#f0f6f2;position:sticky;top:0"; cab.append(th); });
+            tab.append(cab);
+            const MAX = 300;
+            rel.linhas.slice(0, MAX).forEach(l => { const tr = criar("tr"); l.forEach(c => { const td = criar("td", "", String(c ?? "")); td.style.cssText = "padding:8px 12px;border-top:1px solid #eef3f0"; tr.append(td); }); tab.append(tr); });
+            if (!rel.linhas.length) { const tr = criar("tr"); const td = criar("td", "", "Nenhum registro no período."); td.colSpan = rel.colunas.length; td.style.padding = "16px"; tr.append(td); tab.append(tr); }
+            rolagem.append(tab);
+            caixa.append(topo, rolagem);
+            if (rel.linhas.length > MAX) { const aviso = criar("small", "", `Mostrando ${MAX} de ${fmt(rel.linhas.length)} linhas. O arquivo baixado contém todas.`); aviso.style.marginTop = "8px"; caixa.append(aviso); }
+        } catch (erro) { caixa.innerHTML = ""; caixa.append(criar("strong", "", erro.message)); }
     }
 
-
-    // ==========================================
-    // FILTRAR POR PERÍODO
-    // ==========================================
-
-    function filtrarPeriodoRelatorio(periodo) {
-
-        const filtro =
-            document.getElementById(
-                "filtroPeriodoRelatorio"
-            );
-
-        if (filtro) {
-            filtro.value = periodo;
-        }
-
-        renderizarRelatorios();
+    function iniciar() {
+        const r = raiz(); if (!r) return;
+        r.querySelectorAll("[data-rel-ver]").forEach(b => b.addEventListener("click", () => ver(b.dataset.relVer)));
+        const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+        on("btnFiltrarRelatorios", "click", carregar);
+        on("periodo", "change", carregar);
+        on("tipoRelatorio", "change", aplicarTipo);
+        on("btnGerar", "click", () => {
+            const t = val("tipoRelatorio");
+            baixar(!t || t === "todos" ? "geral" : t, val("formato") || "pdf");
+        });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharModal(); });
+        const ver_ = () => { if (location.hash === "#adm.relatorios") carregar(); };
+        window.addEventListener("hashchange", ver_);
+        ver_();
     }
 
-
-    // ==========================================
-    // LIMPAR FILTROS
-    // ==========================================
-
-    function limparFiltrosRelatorios() {
-
-        const busca =
-            document.getElementById(
-                "buscarRelatorio"
-            );
-
-        const tipo =
-            document.getElementById(
-                "filtroTipoRelatorio"
-            );
-
-        const periodo =
-            document.getElementById(
-                "filtroPeriodoRelatorio"
-            );
-
-
-        if (busca) busca.value = "";
-
-        if (tipo) tipo.value = "todos";
-
-        if (periodo) periodo.value = "todos";
-
-
-        renderizarRelatorios();
-    }
-
-
-    // ==========================================
-    // INDICADORES DO DASHBOARD
-    // ==========================================
-
-    function atualizarIndicadores() {
-
-        const total =
-            document.getElementById("totalRelatorios");
-
-        const disponiveis =
-            document.getElementById("relatoriosDisponiveis");
-
-        const mensais =
-            document.getElementById("relatoriosMensais");
-
-        const trimestrais =
-            document.getElementById("relatoriosTrimestrais");
-
-
-        if (total) {
-            total.textContent =
-                relatorios.length;
-        }
-
-
-        if (disponiveis) {
-            disponiveis.textContent =
-                relatorios.filter(
-                    r => r.status === "Disponível"
-                ).length;
-        }
-
-
-        if (mensais) {
-            mensais.textContent =
-                relatorios.filter(
-                    r => r.periodo === "Mensal"
-                ).length;
-        }
-
-
-        if (trimestrais) {
-            trimestrais.textContent =
-                relatorios.filter(
-                    r => r.periodo === "Trimestral"
-                ).length;
-        }
-    }
-
-
-    // ==========================================
-    // SALVAR NO LOCALSTORAGE
-    // ==========================================
-
-    function salvarRelatorios() {
-
-        localStorage.setItem(
-            "relatoriosADM",
-            JSON.stringify(relatorios)
-        );
-    }
-
-
-    // ==========================================
-    // CARREGAR RELATÓRIOS SALVOS
-    // ==========================================
-
-    function carregarRelatorios() {
-
-        const dadosSalvos =
-            localStorage.getItem(
-                "relatoriosADM"
-            );
-
-        if (dadosSalvos) {
-
-            relatorios =
-                JSON.parse(dadosSalvos);
-
-            renderizarRelatorios();
-
-            atualizarIndicadores();
-        }
-    }
-
-
-    // ==========================================
-    // MENSAGEM
-    // ==========================================
-
-    function mostrarMensagemRelatorio(mensagem) {
-
-        const elemento =
-            document.getElementById(
-                "mensagemRelatorio"
-            );
-
-        if (!elemento) {
-            console.log(mensagem);
-            return;
-        }
-
-
-        elemento.textContent = mensagem;
-
-        elemento.style.display = "block";
-
-
-        setTimeout(() => {
-
-            elemento.style.display = "none";
-
-        }, 3000);
-    }
-
-
-    // ==========================================
-    // ATUALIZAR MANUALMENTE
-    // ==========================================
-
-    function atualizarRelatorios() {
-
-        renderizarRelatorios();
-
-        atualizarIndicadores();
-
-        mostrarMensagemRelatorio(
-            "Relatórios atualizados!"
-        );
-    }
-
-
-    // ==========================================
-    // CARREGAR DADOS SALVOS AO ABRIR
-    // ==========================================
-
-    carregarRelatorios();
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar);
+    else iniciar();
 })();   // fim de adm.relatorios.js
 
 /* ================= adm.usuarios.js ================= */
