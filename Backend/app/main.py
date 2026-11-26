@@ -1,11 +1,14 @@
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
-from .routers import adm, analista, colheita, modelos, produtor
+from .routers import adm, analista, colheita, leituras, modelos, produtor
 
 
 @asynccontextmanager
@@ -30,8 +33,15 @@ app.include_router(modelos.router)
 app.include_router(colheita.router)
 app.include_router(produtor.router)
 app.include_router(adm.router)
+app.include_router(leituras.router)
 
 
 @app.get("/saude", tags=["Infra"])
 async def saude():
     return {"status": "ok"}
+
+
+# Dashboard/PWA de monitoramento (Frontend/Monitor) servido em /monitor/
+_monitor = Path(__file__).resolve().parents[2] / "Frontend" / "Monitor"
+if _monitor.is_dir():
+    app.mount("/monitor", StaticFiles(directory=_monitor, html=True), name="monitor")

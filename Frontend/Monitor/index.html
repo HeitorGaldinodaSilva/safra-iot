@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Safra Monitor</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#1e6b47">
+<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#f4f6f1;color:#1f3a2c}
+header{background:#1e6b47;color:#fff;padding:14px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+h1{margin:0;font-size:20px}main{max-width:1100px;margin:0 auto;padding:16px}
+.badge{padding:5px 12px;border-radius:99px;font-size:13px;font-weight:700;background:#888}
+.on{background:#2e9e5b}.warn{background:#d98a00}.off{background:#c0392b}
+#aviso{display:none;margin-bottom:12px;padding:12px 14px;border-radius:10px;background:#fff3cd;border:1px solid #e0b84c;color:#6b4e00}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-bottom:14px}
+.card{background:#fff;border:1px solid #e3ece1;border-radius:12px;padding:16px}
+.card h2{margin:0 0 6px;font-size:14px;color:#5b6f63}.val{font-size:38px;font-weight:800}.sub{font-size:12px;color:#6b7a70}
+.alerta{border-color:#c0392b;background:#fdecea}.val.alerta-t{color:#c0392b}
+#alertas .item{margin:6px 0;padding:8px 12px;border-radius:8px;background:#fdecea;color:#9b2c20;font-weight:600;font-size:14px}
+#alertas .ok{background:#e8f5ec;color:#256b43}
+canvas{width:100%;height:220px;display:block}
+.filtros,.lim{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+label{font-size:12px;color:#5b6f63;display:flex;flex-direction:column;gap:3px}
+input,select,button{padding:8px 10px;border:1px solid #cfdacd;border-radius:8px;font-size:14px}
+button{background:#1e6b47;color:#fff;border:0;cursor:pointer;font-weight:700}input[type=number]{width:90px}
+.tab{max-height:320px;overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid #edf1ea;text-align:left}th{background:#f3f6f0;position:sticky;top:0}
+</style></head><body>
+<header><h1>Safra Monitor <small style="font-weight:400;font-size:13px">ESP32 · temperatura e umidade</small></h1>
+<div><span id="badge" class="badge">Carregando…</span> <button id="inst" style="display:none">Instalar app</button></div></header>
+<main>
+<div id="aviso"></div>
+<div class="grid">
+ <div class="card" id="cT"><h2>Temperatura atual</h2><div class="val" id="vT">--</div><div class="sub" id="sT"></div></div>
+ <div class="card" id="cU"><h2>Umidade atual</h2><div class="val" id="vU">--</div><div class="sub" id="sU"></div></div>
+ <div class="card"><h2>Última comunicação do ESP32</h2><div class="val" style="font-size:24px" id="vC">--</div><div class="sub" id="sC"></div></div>
+</div>
+<div class="card" style="margin-bottom:14px"><h2>Alertas</h2><div id="alertas"></div>
+ <div class="lim" style="margin-top:10px"><label>Temp. máx (°C)<input id="tmax" type="number" step="0.5"></label>
+ <label>Umid. mín (%)<input id="umin" type="number"></label><label>Umid. máx (%)<input id="umax" type="number"></label>
+ <button id="salvaLim">Salvar limites</button></div></div>
+<div class="card" style="margin-bottom:14px"><h2>Alertas registrados no sistema <span class="sub" id="contA"></span></h2><div class="tab" style="max-height:200px"><table><thead><tr><th>Data/Hora</th><th>Alerta</th></tr></thead><tbody id="tbA"></tbody></table></div></div>
+<div class="card" style="margin-bottom:14px"><div class="filtros">
+ <label>Período<select id="per"><option value="24h">Últimas 24 horas</option><option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option></select></label>
+ <label>De<input id="ini" type="date"></label><label>Até<input id="fim" type="date"></label>
+ <button id="filtrar">Filtrar</button><button id="limpar" style="background:#6b7a70">Limpar datas</button></div></div>
+<div class="grid"><div class="card"><h2>Temperatura (°C)</h2><canvas id="gT"></canvas></div>
+<div class="card"><h2>Umidade (%)</h2><canvas id="gU"></canvas></div></div>
+<div class="card"><h2>Histórico <span class="sub" id="cont"></span></h2><div class="tab"><table><thead><tr><th>Data/Hora</th><th>Dispositivo</th><th>Temperatura</th><th>Umidade</th></tr></thead><tbody id="tb"></tbody></table></div></div>
+</main>
+<script>
+const API = location.port === "8000" ? "" : "http://" + (location.hostname || "127.0.0.1") + ":8000";
+const $ = id => document.getElementById(id), LS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };
+let lim = LS("limites") || { tmax: 30, umin: 40, umax: 80 }, dados = null;
+["tmax", "umin", "umax"].forEach(k => $(k).value = lim[k]);
+
+async function get(path) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 6000);
+  try {
+    const r = await fetch(API + path, { signal: c.signal });
+    if (!r.ok) throw { status: r.status };
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+async function carregar() {
+  const p = new URLSearchParams({ limite: 5000, ordem: "asc" });
+  if ($("ini").value || $("fim").value) { if ($("ini").value) p.set("inicio", $("ini").value); if ($("fim").value) p.set("fim", $("fim").value); }
+  else p.set("periodo", $("per").value);
+  try {
+    const [u, h, lm, a] = await Promise.all([get("/api/leituras/ultima").catch(e => e.status === 404 ? null : Promise.reject(e)), get("/api/leituras?" + p), get("/api/limites"), get("/api/alertas?limite=100")]);
+    lim = { tmax: lm.temp_max, umin: lm.umid_min, umax: lm.umid_max }; LS("limites", lim);
+    if (document.activeElement.tagName !== "INPUT") ["tmax", "umin", "umax"].forEach(k => $(k).value = lim[k]);
+    dados = { u, h, a, salvoEm: new Date().toLocaleString("pt-BR") }; LS("cache", dados); desenhar(false);
+  } catch (e) {
+    const c = LS("cache");
+    if (c) { dados = c; desenhar(true, e.status); } else { setBadge("Sem conexão", "off"); aviso(e.status === 401 ? "A API exige login. Defina LEITURAS_GET_PUBLICO=true no .env." : "Sem conexão com a API e sem dados salvos neste aparelho."); }
+  }
+}
+function setBadge(t, c) { $("badge").textContent = t; $("badge").className = "badge " + c; }
+function aviso(t) { $("aviso").style.display = t ? "block" : "none"; $("aviso").textContent = t || ""; }
+function tempoAtras(s) { if (s == null) return "--"; if (s < 60) return s + " s"; if (s < 3600) return Math.floor(s / 60) + " min"; if (s < 86400) return Math.floor(s / 3600) + " h"; return Math.floor(s / 86400) + " dias"; }
+
+function desenhar(offline, status) {
+  const { u, h } = dados;
+  if (offline) { setBadge("Offline · dados salvos", "off"); aviso(status === 401 ? "A API exige login. Mostrando dados salvos em " + dados.salvoEm + "." : "Sem conexão com a API. Estes dados foram salvos em " + dados.salvoEm + " e NÃO são medições em tempo real."); }
+  else { aviso(""); setBadge(u && u.online ? "Online · ESP32 enviando" : "ESP32 sem comunicação", u && u.online ? "on" : "warn"); }
+  const rot = offline ? "Última leitura salva (não é tempo real)" : "Leitura recebida";
+  if (u) {
+    $("vT").textContent = u.temperatura.toFixed(1) + " °C"; $("vU").textContent = u.umidade.toFixed(1) + " %";
+    $("sT").textContent = $("sU").textContent = rot + " · " + u.data_hora_local;
+    $("vC").textContent = offline ? u.data_hora_local : "há " + tempoAtras(u.segundos_desde_ultima);
+    $("sC").textContent = (offline ? "Dispositivo " : "Dispositivo ") + u.device_id + (offline ? " · dado salvo" : (u.online ? " · online" : " · offline"));
+  } else { $("vT").textContent = $("vU").textContent = $("vC").textContent = "--"; $("sT").textContent = $("sU").textContent = $("sC").textContent = "Nenhuma leitura registrada ainda."; }
+  const av = [];
+  if (u) {
+    if (u.temperatura > lim.tmax) av.push("🌡️ Temperatura elevada: " + u.temperatura.toFixed(1) + " °C (máx. " + lim.tmax + " °C)");
+    if (u.umidade < lim.umin) av.push("💧 Umidade baixa: " + u.umidade.toFixed(1) + " % (mín. " + lim.umin + " %)");
+    if (u.umidade > lim.umax) av.push("💧 Umidade alta: " + u.umidade.toFixed(1) + " % (máx. " + lim.umax + " %)");
+  }
+  $("alertas").innerHTML = av.length ? av.map(a => '<div class="item">' + a + (offline ? " (dado salvo)" : "") + "</div>").join("") : '<div class="item ok">Tudo dentro dos limites.</div>';
+  $("cT").classList.toggle("alerta", !!(u && u.temperatura > lim.tmax));
+  $("cU").classList.toggle("alerta", !!(u && (u.umidade < lim.umin || u.umidade > lim.umax)));
+  const L = h.leituras;
+  grafico($("gT"), L.map(x => x.temperatura), L, "#d9534f"); grafico($("gU"), L.map(x => x.umidade), L, "#2b7bb9");
+  $("cont").textContent = "(" + h.retornadas + " de " + h.total + " leituras no filtro)";
+  const A = (dados.a && dados.a.alertas) || [];
+  $("contA").textContent = "(" + (dados.a ? dados.a.total : 0) + " no total)";
+  $("tbA").innerHTML = A.length ? A.map(x => "<tr><td>" + x.data_hora_local + "</td><td>" + x.mensagem + "</td></tr>").join("") : '<tr><td colspan="2">Nenhum alerta registrado.</td></tr>';
+  $("tb").innerHTML = L.slice(-200).reverse().map(x => "<tr><td>" + x.data_hora_local + "</td><td>" + x.device_id + "</td><td>" + x.temperatura.toFixed(1) + " °C</td><td>" + x.umidade.toFixed(1) + " %</td></tr>").join("");
+}
+function grafico(cv, ys, L, cor) {
+  const d = devicePixelRatio || 1, W = cv.width = cv.clientWidth * d, H = cv.height = cv.clientHeight * d, c = cv.getContext("2d");
+  c.clearRect(0, 0, W, H); c.font = 12 * d + "px sans-serif"; c.fillStyle = "#6b7a70";
+  if (ys.length < 2) { c.fillText("Dados insuficientes no período", 16 * d, H / 2); return; }
+  let mn = Math.min(...ys), mx = Math.max(...ys); if (mx - mn < 2) { const m = (mx + mn) / 2; mn = m - 1; mx = m + 1; }
+  const r = mx - mn, l = 44 * d, b = 24 * d, t = 10 * d;
+  const X = i => l + i * (W - l - 10 * d) / (ys.length - 1), Y = y => H - b - (y - mn) / r * (H - b - t);
+  c.strokeStyle = "#e3ece1"; c.lineWidth = 1; [mn, (mn + mx) / 2, mx].forEach(v => { c.beginPath(); c.moveTo(l, Y(v)); c.lineTo(W, Y(v)); c.stroke(); c.fillText(v.toFixed(1), 4 * d, Y(v) + 4 * d); });
+  c.strokeStyle = cor; c.lineWidth = 2 * d; c.beginPath(); ys.forEach((y, i) => i ? c.lineTo(X(i), Y(y)) : c.moveTo(X(i), Y(y))); c.stroke();
+  c.fillStyle = "#6b7a70"; c.fillText(L[0].data_hora_local, l, H - 6 * d); const f = L[L.length - 1].data_hora_local; c.fillText(f, W - c.measureText(f).width - 6 * d, H - 6 * d);
+}
+$("filtrar").onclick = carregar;
+$("limpar").onclick = () => { $("ini").value = $("fim").value = ""; carregar(); };
+$("per").onchange = () => { $("ini").value = $("fim").value = ""; carregar(); };
+$("salvaLim").onclick = async () => {
+  const n = { temp_max: +$("tmax").value, umid_min: +$("umin").value, umid_max: +$("umax").value };
+  try {
+    const r = await fetch(API + "/api/limites", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(n) });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); alert(typeof j.detail === "string" ? j.detail : "Limites inválidos."); return; }
+    carregar();
+  } catch (e) { alert("Sem conexão com a API: limites não salvos."); }
+};
+window.addEventListener("online", carregar); window.addEventListener("offline", () => { if (dados) desenhar(true); });
+let ev; window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); ev = e; $("inst").style.display = "inline-block"; });
+$("inst").onclick = async () => { if (ev) { ev.prompt(); ev = null; $("inst").style.display = "none"; } };
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+carregar(); setInterval(carregar, 15000); window.addEventListener("resize", () => dados && desenhar(!navigator.onLine));
+</script></body></html>
